@@ -25,7 +25,7 @@ supabase = init_supabase()
 # SISTEMA DE USUARIOS Y CONTRASEÑAS
 # ---------------------------------------------------------
 USUARIOS = {
-    "editor": {"password": "geavig2026admin", "nombre": "EDITOR / COORDINACIÓN", "rol": "editor"},
+    "cristina98": {"password": "cristinaec", "nombre": "EDITOR / COORDINACIÓN", "rol": "editor"},
     "captura1": {"password": "geavig2026user", "nombre": "CAPTURISTA 1", "rol": "capturista"},
     "captura2": {"password": "geavig2026user", "nombre": "CAPTURISTA 2", "rol": "capturista"},
     "captura3": {"password": "geavig2026user", "nombre": "CAPTURISTA 3", "rol": "capturista"}
@@ -221,6 +221,19 @@ def mostrar_login():
                     st.rerun()
                 else:
                     st.error("❌ Usuario o contraseña incorrectos")
+
+        # 👈 Presionas ENTER al final del "else:" y pegas esto con 8 espacios a la izquierda (alineado con "with st.form"):
+        with st.expander("🔑 Credenciales de Acceso / Demo"):
+            st.markdown("""
+            | Usuario | Contraseña | Rol | Acceso |
+            | :--- | :--- | :--- | :--- |
+            | **editor** | `geavig2026admin` | Editor | Captura + Ver Base de Datos y Exportar Excel |
+            | **captura1** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+            | **captura2** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+            | **captura3** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+            """)
+            
+    st.error("❌ Usuario o contraseña incorrectos")
 
 if not st.session_state["autenticado"]:
     mostrar_login()
@@ -661,7 +674,19 @@ with tab1:
 # ---------------------------------------------------------
 # PESTAÑA DE COORDINACIÓN (SOLO EDITOR)
 # ---------------------------------------------------------
-if st.session_state["rol_usuario"] == "editor":
+if st.session_state["rol_usuario"] == "editor":  
     with tab2:
         st.header("📊 Panel de Coordinación y Exportación de Datos")
-        st.info("Vista para consulta general, métricas y descarga de reportes consolidado.")
+        st.info("Vista para consulta general, métricas y descarga de reportes consolidado.")   
+        
+        st.divider()
+        
+        # --- TABLA DE USUARIOS Y ROLES ---
+        st.markdown("""
+        | Usuario | Contraseña | Rol | Permisos y Acceso |
+        | :--- | :--- | :--- | :--- |
+        | **editor** | `geavig2026admin` | Editor | Captura + Ver Base de Datos y Exportar Excel |
+        | **captura1** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        | **captura2** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        | **captura3** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        """)
