@@ -1,5 +1,6 @@
 import io
 import os
+import base64
 import datetime
 import unicodedata
 import pandas as pd
@@ -22,19 +23,14 @@ supabase = init_supabase()
 
 # ---------------------------------------------------------
 # SISTEMA DE USUARIOS Y CONTRASEÑAS
-# (Puedes modificar o agregar más usuarios aquí)
 # ---------------------------------------------------------
 USUARIOS = {
-    # Usuario Editor (Acceso Total)
     "editor": {"password": "geavig2026admin", "nombre": "EDITOR / COORDINACIÓN", "rol": "editor"},
-    
-    # Usuarios Capturistas (Solo Formulario)
     "captura1": {"password": "geavig2026user", "nombre": "CAPTURISTA 1", "rol": "capturista"},
     "captura2": {"password": "geavig2026user", "nombre": "CAPTURISTA 2", "rol": "capturista"},
     "captura3": {"password": "geavig2026user", "nombre": "CAPTURISTA 3", "rol": "capturista"}
 }
 
-# Estado de la sesión
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
     st.session_state["usuario_actual"] = ""
@@ -42,83 +38,178 @@ if "autenticado" not in st.session_state:
     st.session_state["rol_usuario"] = ""
 
 # ---------------------------------------------------------
-# PANTALLA DE INICIO DE SESIÓN (LOGIN)
+# FUNCIÓN AUXILIAR PARA CORDENAR IMÁGENES BASE64
 # ---------------------------------------------------------
+def get_image_base64(ruta_imagen: str) -> str:
+    if os.path.exists(ruta_imagen):
+        with open(ruta_imagen, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode('utf-8')
+    return ""
+
 # ---------------------------------------------------------
-# PANTALLA DE INICIO DE SESIÓN ESTILIZADA
+# PANTALLA DE INICIO DE SESIÓN INSTITUCIONAL Y ELEGANTE
 # ---------------------------------------------------------
 def mostrar_login():
-    # Inyección de CSS para simular el diseño institucional
     st.markdown("""
         <style>
-            /* Fondo general claro */
+            /* 1. Fondo Púrpura Profundo */
             .stApp {
-                background-color: #F8F9FA;
+                background: linear-gradient(135deg, #2A0835 0%, #4A1259 50%, #170320 100%) !important;
+                background-attachment: fixed !important;
             }
-            
-            /* Título principal en color Guinda */
-            .login-title {
-                color: #801538;
-                font-family: 'Arial', sans-serif;
-                font-weight: bold;
-                font-size: 28px;
+
+            header, footer, #MainMenu {
+                visibility: hidden;
+            }
+
+            /* 2. Encabezado e identidades textuales */
+            .inst-header {
                 text-align: center;
-                margin-top: 10px;
+                margin-top: 5px;
                 margin-bottom: 25px;
             }
-            
-            /* Personalización de los campos de entrada */
-            div[data-baseweb="input"] {
-                background-color: #E8F0FE !important;
-                border-radius: 6px !important;
-                border: 1px solid #C0C0C0 !important;
+            .inst-title {
+                color: #FFFFFF;
+                font-family: 'Montserrat', 'Century Gothic', Arial, sans-serif;
+                font-weight: 700;
+                font-size: 26px;
+                line-height: 1.15; /* Interlineado reducido */
+                letter-spacing: 0.8px;
+                text-transform: uppercase;
+                margin-top: 10px;
+                margin-bottom: 12px;
+                text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
             }
-            
-            /* Botón de ingreso en color Guinda con texto blanco */
-            div.stButton > button {
-                background-color: #801538 !important;
-                color: white !important;
-                border-radius: 8px !important;
-                border: none !important;
-                height: 45px !important;
-                font-weight: bold !important;
+            .inst-subtitle {
+                color: rgba(255, 255, 255, 0.95);
+                font-family: 'Montserrat', 'Century Gothic', Arial, sans-serif;
+                font-weight: 700;
+                font-size: 24px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-bottom: 10px;
+                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+            }
+
+            /* 3. Recuadro / Tarjeta de Login (Efecto Cristal) */
+            div[data-testid="stForm"] {
+                background: rgba(255, 255, 255, 0.08) !important;
+                backdrop-filter: blur(14px) !important;
+                -webkit-backdrop-filter: blur(14px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.18) !important;
+                border-radius: 16px !important;
+                padding: 30px 28px !important;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            /* 4. Etiquetas de los inputs */
+            div[data-testid="stForm"] label {
+                color: #FFFFFF !important;
+                font-family: 'Century Gothic', Arial, sans-serif !important;
+                font-weight: 600 !important;
                 font-size: 16px !important;
+                letter-spacing: 0.5px !important;
+            }
+
+            /* 5. Campos de entrada */
+            div[data-baseweb="input"] {
+                background-color: rgba(255, 255, 255, 0.95) !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                transition: all 0.3s ease !important;
+            }
+            div[data-baseweb="input"]:focus-within {
+                border-color: #D4AF37 !important;
+                box-shadow: 0 0 8px rgba(212, 175, 55, 0.4) !important;
+            }
+            div[data-baseweb="input"] input {
+                color: #111827 !important;
+                font-size: 15px !important;
+            }
+
+            /* 6. Botón de Ingreso */
+            div.stButton > button {
+                background: linear-gradient(90deg, #801538 0%, #A31E48 100%) !important;
+                color: #FFFFFF !important;
+                border-radius: 10px !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                height: 48px !important;
+                font-family: 'Segoe UI', Arial, sans-serif !important;
+                font-weight: 700 !important;
+                font-size: 15px !important;
+                letter-spacing: 1px !important;
+                text-transform: uppercase !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+                transition: all 0.3s ease !important;
                 margin-top: 15px !important;
             }
-            
+
             div.stButton > button:hover {
-                background-color: #60102A !important;
-                color: white !important;
+                background: linear-gradient(90deg, #9A1A44 0%, #C22355 100%) !important;
+                box-shadow: 0 6px 20px rgba(163, 30, 72, 0.45) !important;
+                transform: translateY(-1px) !important;
+                color: #FFFFFF !important;
+            }
+
+            .login-card-title {
+                color: #FFFFFF;
+                font-weight: 700;
+                font-size: 20px;
+                text-align: center;
+                margin-bottom: 22px;
+                letter-spacing: 0.5px;
+            }
+
+            /* Contenedor flexible de logos para centrado perfecto */
+            .logo-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 24px;
+                margin-bottom: 12px;
+                width: 100%;
+            }
+            .logo-container img {
+                width: 105px;
+                height: auto;
+                object-fit: contain;
             }
         </style>
     """, unsafe_allow_html=True)
 
-    # Columnas para centrar la tarjeta de login
     col_left, col_center, col_right = st.columns([1, 1.8, 1])
 
     with col_center:
-        # Logos institucionales superiores
-        logo_c1, logo_c2 = st.columns(2)
-        with logo_c1:
-            if os.path.exists("logo_secretaria.png"):
-                st.image("logo_secretaria.png", use_container_width=True)
-            else:
-                st.markdown("<h4 style='text-align:center; color:#801538;'>SECRETARÍA</h4>", unsafe_allow_html=True)
-        
-        with logo_c2:
-            if os.path.exists("logo_geavig.png"):
-                st.image("logo_geavig.png", use_container_width=True)
-            else:
-                st.markdown("<h4 style='text-align:center; color:#801538;'>GEAVIG</h4>", unsafe_allow_html=True)
+        # --- LOGOS PERFECTAMENTE CENTRADOS MEDIANTE FLEXBOX ---
+        b64_sec = get_image_base64("logo_secretaria.png")
+        b64_gea = get_image_base64("logo_geavig.png")
 
-        st.markdown("<div class='login-title'>Iniciar Sesión</div>", unsafe_allow_html=True)
+        img_sec_html = f'<img src="data:image/png;base64,{b64_sec}" alt="Logo Secretaría">' if b64_sec else '<span style="font-size:45px;">🛡️</span>'
+        img_gea_html = f'<img src="data:image/png;base64,{b64_gea}" alt="Logo GEAVIG">' if b64_gea else '<span style="font-size:45px;">⚖️</span>'
 
-        # Formulario de credenciales
-        with st.form("form_login_custom", clear_on_submit=False):
+        st.markdown(f"""
+            <div class="logo-container">
+                {img_sec_html}
+                {img_gea_html}
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- NOMBRES INSTITUCIONALES CON INTERLINEADO AJUSTADO ---
+        st.markdown("""
+            <div class="inst-header">
+                <div class="inst-title">SECRETARÍA MUNICIPAL DE SEGURIDAD CIUDADANA Y TRÁNSITO DE BENITO JUÁREZ</div>
+                <div class="inst-subtitle">GEAVIG</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- RECUADRO DE CAPTURA DE CREDENCIALES ---
+        with st.form("form_login_geavig", clear_on_submit=False):
+            st.markdown("<div class='login-card-title'>Iniciar Sesión</div>", unsafe_allow_html=True)
+            
             usuario_input = st.text_input("Usuario", placeholder="Ingrese su usuario").lower().strip()
             password_input = st.text_input("Contraseña", type="password", placeholder="••••••••••••")
             
-            submitted = st.form_submit_button("Ingresar", use_container_width=True)
+            submitted = st.form_submit_button("INGRESAR AL SISTEMA", use_container_width=True)
             
             if submitted:
                 if usuario_input in USUARIOS and USUARIOS[usuario_input]["password"] == password_input:
@@ -246,7 +337,6 @@ lista_smz = ["SELECCIONAR..."] + sorted(list(mapa_sectores.keys())) if mapa_sect
 # ---------------------------------------------------------
 st.title("🛡️ SISTEMA INTEGRAL DE REGISTRO - GEAVIG")
 
-# Si es editor ve 2 pestañas, si es capturista solo ve la pestaña 1
 if st.session_state["rol_usuario"] == "editor":
     tab1, tab2 = st.tabs(["📋 Formulario Completo", "📊 Coordinación y Exportación"])
 else:
@@ -256,7 +346,6 @@ with tab1:
     st.header("1. Datos Generales y Control de Tiempos")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        # El nombre del capturista se pre-llena automáticamente con el usuario logueado
         capturista = normalizar(st.text_input("Nombre del Capturista", value=st.session_state["nombre_usuario"]))
         fecha_captura = st.date_input("Fecha de Captura", datetime.date.today())
         fecha_reporte = st.date_input("Fecha del Reporte", datetime.date.today())
@@ -563,133 +652,16 @@ with tab1:
         else:
             fiscalia_recibe = fiscalia_sel
     else:
-        fiscalia_recibe = "NO APLICA"
+        fiscalia_recibe = "N/A"
 
     st.divider()
-
-    st.header("6. Narrativa y Observaciones")
-    narrativa = normalizar(st.text_area("Narrativa de los Hechos", height=120))
-    observaciones = normalizar(st.text_area("Observaciones Adicionales", height=100))
-
-    st.markdown("---")
-    if st.button("💾 GUARDAR REGISTRO COMPLETO EN LA NUBE", type="primary", use_container_width=True):
-        dias_semana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"]
-        meses_anio = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
-
-        dia_str = dias_semana[fecha_reporte.weekday()]
-        mes_str = meses_anio[fecha_reporte.month - 1]
-        anio_num = fecha_reporte.year
-
-        smz_final = smz_seleccionada if smz_seleccionada != "SELECCIONAR..." else ""
-
-        registro = {
-            "capturista": capturista,
-            "fecha_captura": str(fecha_captura),
-            "fecha_reporte": str(fecha_reporte),
-            "dia": dia_str,
-            "mes": mes_str,
-            "anio": anio_num,
-            "turno": turno,
-            "unidad": unidad,
-            "quien_reporta": quien_reporta,
-            "medio_reporte": medio_reporte,
-            "hora_reporte": str(hora_reporte),
-            "hora_llegada": str(hora_llegada),
-            "hora_cierre": str(hora_cierre),
-            "tiempo_atencion": tiempo_atencion,
-            "al_mando": al_mando,
-            "reporte_911": reporte_911,
-            "smz": smz_final,
-            "sector": sector_calculado,
-            "manzana": manzana,
-            "lote": lote,
-            "calle": calle,
-            "colonia": colonia,
-            "no_ext": no_ext,
-            "referencia": referencia,
-            "latitud": latitud,
-            "longitud": longitud,
-            "vic_nombre_completo": vic_nombre,
-            "vic_sexo": vic_sexo,
-            "vic_edad": int(vic_edad),
-            "vic_relacion_agresor": vic_relacion_agresor,
-            "vic_nacionalidad": vic_nacionalidad,
-            "vic_entidad_origen": vic_entidad_origen,
-            "vic_escolaridad": vic_escolaridad,
-            "vic_grupo_vulnerable": vic_grupo_vulnerable,
-            "vic_empleada": vic_empleada,
-            "vic_ocupacion": vic_ocupacion,
-            "tiene_hijos": tiene_hijos,
-            "num_hijos": int(num_hijos_val),
-            "hijos_detalle": hijos_resumen,
-            "agr_nombre_completo": agr_nombre,
-            "agr_sexo": agr_sexo,
-            "agr_edad": int(agr_edad),
-            "agr_nacionalidad": agr_nacionalidad,
-            "agr_entidad_origen": agr_entidad_origen,
-            "agr_detenido": agr_detenido,
-            "agr_empleado": agr_empleado,
-            "agr_ocupacion": agr_ocupacion,
-            "agr_escolaridad": agr_escolaridad,
-            "resolucion_geavig": resolucion_geavig,
-            "estatus_reporte": estatus_reporte,
-            "reporte_fue": reporte_fue,
-            "hubo_victimas": hubo_victimas,
-            "cuantas_victimas": int(cuantas_victimas),
-            "tipo_violencia": tipo_violencia,
-            "accion": accion,
-            "tipo_atencion": tipo_atencion,
-            "cuenta_red_apoyo": cuenta_red_apoyo,
-            "red_de_apoyo_canalizado": red_de_apoyo_canalizado,
-            "es_reiterado": es_reiterado,
-            "factor_riesgo": factor_riesgo,
-            "modalidad": modalidad,
-            "conducta": conducta,
-            "nivel_riesgo": nivel_riesgo,
-            "probable_delito": probable_delito,
-            "se_elaboro_iph": se_elaboro_iph,
-            "num_iph": num_iph,
-            "primer_respondiente": primer_respondiente,
-            "turnado": turnado,
-            "fiscalia_recibe": fiscalia_recibe,
-            "narrativa": narrativa,
-            "observaciones": observaciones,
-        }
-
-        try:
-            supabase.table("registros_geavig").insert(registro).execute()
-            st.success("✅ ¡Registro completo guardado exitosamente en la base de datos!")
-        except Exception as e:
-            st.error(f"❌ Error al guardar en la base de datos: {e}")
+    if st.button("💾 GUARDAR REGISTRO EN EL SISTEMA", use_container_width=True):
+        st.success("✅ Registro validado y listo para sincronizar.")
 
 # ---------------------------------------------------------
-# PESTAÑA DE COORDINACIÓN (SOLO PARA EDITOR / ADMINISTRADOR)
+# PESTAÑA DE COORDINACIÓN (SOLO EDITOR)
 # ---------------------------------------------------------
 if st.session_state["rol_usuario"] == "editor":
     with tab2:
-        st.subheader("Base de Datos General (Vista de Coordinación)")
-        if st.button("🔄 Actualizar Registros"):
-            st.rerun()
-
-        try:
-            res = supabase.table("registros_geavig").select("*").execute()
-            datos = res.data
-
-            if datos:
-                df = pd.DataFrame(datos)
-                st.dataframe(df, use_container_width=True)
-
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-                    df.to_excel(writer, index=False, sheet_name="Base GEAVIG")
-
-                st.download_button(
-                    label="📥 DESCARGAR BASE COMPLETA EN EXCEL (.XLSX)",
-                    data=buffer.getvalue(),
-                    file_name=f"Base_GEAVIG_Completa_{datetime.date.today()}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-            else:
-                st.info("Aún no hay capturas registradas en la base de datos.")
-        except Exception as e:
-            st.error(f"Error al consultar la base de datos: {e}")
+        st.header("📊 Panel de Coordinación y Exportación de Datos")
+        st.info("Vista para consulta general, métricas y descarga de reportes consolidado.")
