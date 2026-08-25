@@ -7,9 +7,9 @@ import streamlit as st
 from supabase import create_client, Client
 
 # ---------------------------------------------------------
-# CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
+# CONFIGURACIÓN DE PÁGINA
 # ---------------------------------------------------------
-st.set_page_config(page_title="Sistema GEAVIG Completo", layout="wide")
+st.set_page_config(page_title="Sistema GEAVIG Completo", layout="wide", page_icon="🛡️")
 
 SUPABASE_URL = "https://neivobvldbqrlblrrmyd.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5laXZvYnZsZGJxcmxibHJybXlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMjY0MjMsImV4cCI6MjEwMjkwMjQyM30.9CNcod0le2EtQgFQnxnWxURWfRd-jyF0RaBhblIhEw8"
@@ -21,10 +21,73 @@ def init_supabase() -> Client:
 supabase = init_supabase()
 
 # ---------------------------------------------------------
+# SISTEMA DE USUARIOS Y CONTRASEÑAS
+# (Puedes modificar o agregar más usuarios aquí)
+# ---------------------------------------------------------
+USUARIOS = {
+    # Usuario Editor (Acceso Total)
+    "editor": {"password": "geavig2026admin", "nombre": "EDITOR / COORDINACIÓN", "rol": "editor"},
+    
+    # Usuarios Capturistas (Solo Formulario)
+    "captura1": {"password": "geavig2026user", "nombre": "CAPTURISTA 1", "rol": "capturista"},
+    "captura2": {"password": "geavig2026user", "nombre": "CAPTURISTA 2", "rol": "capturista"},
+    "captura3": {"password": "geavig2026user", "nombre": "CAPTURISTA 3", "rol": "capturista"}
+}
+
+# Estado de la sesión
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
+    st.session_state["usuario_actual"] = ""
+    st.session_state["nombre_usuario"] = ""
+    st.session_state["rol_usuario"] = ""
+
+# ---------------------------------------------------------
+# PANTALLA DE INICIO DE SESIÓN (LOGIN)
+# ---------------------------------------------------------
+def mostrar_login():
+    st.markdown("<h2 style='text-align: center;'>🛡️ SISTEMA INTEGRAL DE REGISTRO - GEAVIG</h2>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: gray;'>Inicio de Sesión</h4>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        with st.form("form_login"):
+            usuario_input = st.text_input("Usuario").lower().strip()
+            password_input = st.text_input("Contraseña", type="password")
+            submitted = st.form_submit_button("🔑 INGRESAR AL SISTEMA", use_container_width=True, type="primary")
+            
+            if submitted:
+                if usuario_input in USUARIOS and USUARIOS[usuario_input]["password"] == password_input:
+                    st.session_state["autenticado"] = True
+                    st.session_state["usuario_actual"] = usuario_input
+                    st.session_state["nombre_usuario"] = USUARIOS[usuario_input]["nombre"]
+                    st.session_state["rol_usuario"] = USUARIOS[usuario_input]["rol"]
+                    st.success(f"Bienvenido(a), {st.session_state['nombre_usuario']}")
+                    st.rerun()
+                else:
+                    st.error("❌ Usuario o contraseña incorrectos")
+
+if not st.session_state["autenticado"]:
+    mostrar_login()
+    st.stop()
+
+# ---------------------------------------------------------
+# BARRA LATERAL (CERRAR SESIÓN Y PERFIL)
+# ---------------------------------------------------------
+with st.sidebar:
+    st.markdown(f"👤 **Usuario:** {st.session_state['nombre_usuario']}")
+    st.markdown(f"🏷️ **Rol:** {st.session_state['rol_usuario'].upper()}")
+    st.divider()
+    if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        st.session_state["autenticado"] = False
+        st.session_state["usuario_actual"] = ""
+        st.session_state["nombre_usuario"] = ""
+        st.session_state["rol_usuario"] = ""
+        st.rerun()
+
+# ---------------------------------------------------------
 # FUNCIÓN AUXILIAR: MAYÚSCULAS Y SIN ACENTOS
 # ---------------------------------------------------------
 def normalizar(texto) -> str:
-    """Convierte cualquier texto a MAYÚSCULAS y elimina los acentos/tildes."""
     if not texto:
         return ""
     str_texto = str(texto)
@@ -33,7 +96,7 @@ def normalizar(texto) -> str:
     return sin_acentos.upper().strip()
 
 # ---------------------------------------------------------
-# LECTURA DE CATÁLOGOS DESDE EXCEL CON FALLBACK
+# LECTURA DE CATÁLOGOS DESDE EXCEL
 # ---------------------------------------------------------
 @st.cache_data
 def cargar_catalogos():
@@ -69,14 +132,12 @@ def cargar_catalogos():
                 df = pd.read_excel(xls, sheet_name=sheet)
                 df.columns = [normalizar(col) for col in df.columns]
                 
-                # Cargar SMZ - SECTOR
                 col_sector = 'SECTORES' if 'SECTORES' in df.columns else ('SECTOR' if 'SECTOR' in df.columns else None)
                 if 'SMZ' in df.columns and col_sector:
                     smz_s = df['SMZ'].dropna().astype(str).apply(normalizar)
                     sec_s = df[col_sector].dropna().astype(str).apply(normalizar)
                     catalogos["SMZ_SECTOR"].update(dict(zip(smz_s, sec_s)))
 
-                # Mapeo de columnas de Excel a claves de catálogo
                 mapeo = {
                     "QUIEN REPORTA": "QUIEN_REPORTA",
                     "PARTICULAR": "PARTICULAR",
@@ -116,18 +177,22 @@ mapa_sectores = catalogos["SMZ_SECTOR"]
 lista_smz = ["SELECCIONAR..."] + sorted(list(mapa_sectores.keys())) if mapa_sectores else ["SELECCIONAR..."]
 
 # ---------------------------------------------------------
-# INTERFAZ Y FORMULARIO DE CAPTURA
+# VISTA PRINCIPAL SEGÚN EL ROL DEL USUARIO
 # ---------------------------------------------------------
 st.title("🛡️ SISTEMA INTEGRAL DE REGISTRO - GEAVIG")
 
-tab1, tab2 = st.tabs(["📋 Formulario Completo", "📊 Coordinación y Exportación"])
+# Si es editor ve 2 pestañas, si es capturista solo ve la pestaña 1
+if st.session_state["rol_usuario"] == "editor":
+    tab1, tab2 = st.tabs(["📋 Formulario Completo", "📊 Coordinación y Exportación"])
+else:
+    tab1 = st.container()
 
 with tab1:
-    # --- SECCIÓN 1: DATOS GENERALES Y TIEMPOS ---
     st.header("1. Datos Generales y Control de Tiempos")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        capturista = normalizar(st.text_input("Nombre del Capturista"))
+        # El nombre del capturista se pre-llena automáticamente con el usuario logueado
+        capturista = normalizar(st.text_input("Nombre del Capturista", value=st.session_state["nombre_usuario"]))
         fecha_captura = st.date_input("Fecha de Captura", datetime.date.today())
         fecha_reporte = st.date_input("Fecha del Reporte", datetime.date.today())
     
@@ -178,7 +243,6 @@ with tab1:
 
     st.divider()
 
-    # --- SECCIÓN 2: UBICACIÓN ---
     st.header("2. Ubicación de los Hechos")
     u1, u2, u3, u4 = st.columns(4)
     with u1:
@@ -207,7 +271,6 @@ with tab1:
 
     st.divider()
 
-    # --- SECCIÓN 3: DATOS DE LA VÍCTIMA ---
     st.header("3. Datos de la Víctima")
     v1, v2 = st.columns(2)
     
@@ -303,7 +366,6 @@ with tab1:
 
     st.divider()
 
-    # --- SECCIÓN 4: DATOS DEL AGRESOR(A) ---
     st.header("4. Datos del Agresor(a)")
     a1, a2 = st.columns(2)
     
@@ -348,10 +410,8 @@ with tab1:
 
     st.divider()
 
-    # --- SECCIÓN 5: CLASIFICACIÓN E IPH ---
     st.header("5. Clasificación e IPH")
 
-    # Lectura del estado de IPH para sincronizar el bloqueo entre columnas 3 y 4
     se_elaboro_iph_val = st.session_state.get("se_elaboro_iph", "SI")
     iph_bloqueado = (se_elaboro_iph_val == "NO")
 
@@ -387,7 +447,6 @@ with tab1:
         else:
             tipo_atencion = ta_sel
 
-        # Modalidad cargada dinámicamente desde el Excel sectores.xlsx
         mod_sel = st.selectbox("Modalidad", catalogos["MODALIDAD"])
         if mod_sel == "OTRO":
             modalidad = normalizar(st.text_input("Especifique Modalidad"))
@@ -397,7 +456,6 @@ with tab1:
         conducta = normalizar(st.text_input("Conducta"))
         nivel_riesgo = st.selectbox("Nivel de Riesgo", ["BAJO", "MEDIO", "ALTO", "CRITICO"])
 
-        # Campo PROBABLE DELITO bloqueado cuando no hay IPH
         if iph_bloqueado:
             probable_delito = st.text_input("Probable Delito", value="N/A", disabled=True)
         else:
@@ -432,7 +490,6 @@ with tab1:
             else:
                 turnado = turnado_sel
 
-    # Despliegue a todo lo ancho de la Fiscalía si fue Turnado a Ministerio Público
     if not iph_bloqueado and turnado == "MINISTERIO PUBLICO":
         st.markdown("**Fiscalía que Recibe:**")
         fiscalia_sel = st.selectbox("Seleccione Fiscalía que recibe el caso", catalogos["FISCALIA"], key="fiscalia_full")
@@ -445,7 +502,6 @@ with tab1:
 
     st.divider()
 
-    # --- SECCIÓN 6: NARRATIVA Y GUARDAR ---
     st.header("6. Narrativa y Observaciones")
     narrativa = normalizar(st.text_area("Narrativa de los Hechos", height=120))
     observaciones = normalizar(st.text_area("Observaciones Adicionales", height=100))
@@ -542,32 +598,33 @@ with tab1:
             st.error(f"❌ Error al guardar en la base de datos: {e}")
 
 # ---------------------------------------------------------
-# PESTAÑA DE COORDINACIÓN
+# PESTAÑA DE COORDINACIÓN (SOLO PARA EDITOR / ADMINISTRADOR)
 # ---------------------------------------------------------
-with tab2:
-    st.subheader("Base de Datos General (Vista de Coordinación)")
-    if st.button("🔄 Actualizar Registros"):
-        st.rerun()
+if st.session_state["rol_usuario"] == "editor":
+    with tab2:
+        st.subheader("Base de Datos General (Vista de Coordinación)")
+        if st.button("🔄 Actualizar Registros"):
+            st.rerun()
 
-    try:
-        res = supabase.table("registros_geavig").select("*").execute()
-        datos = res.data
+        try:
+            res = supabase.table("registros_geavig").select("*").execute()
+            datos = res.data
 
-        if datos:
-            df = pd.DataFrame(datos)
-            st.dataframe(df, use_container_width=True)
+            if datos:
+                df = pd.DataFrame(datos)
+                st.dataframe(df, use_container_width=True)
 
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-                df.to_excel(writer, index=False, sheet_name="Base GEAVIG")
+                buffer = io.BytesIO()
+                with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+                    df.to_excel(writer, index=False, sheet_name="Base GEAVIG")
 
-            st.download_button(
-                label="📥 DESCARGAR BASE COMPLETA EN EXCEL (.XLSX)",
-                data=buffer.getvalue(),
-                file_name=f"Base_GEAVIG_Completa_{datetime.date.today()}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-        else:
-            st.info("Aún no hay capturas registradas en la base de datos.")
-    except Exception as e:
-        st.error(f"Error al consultar la base de datos: {e}")
+                st.download_button(
+                    label="📥 DESCARGAR BASE COMPLETA EN EXCEL (.XLSX)",
+                    data=buffer.getvalue(),
+                    file_name=f"Base_GEAVIG_Completa_{datetime.date.today()}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            else:
+                st.info("Aún no hay capturas registradas en la base de datos.")
+        except Exception as e:
+            st.error(f"Error al consultar la base de datos: {e}")
