@@ -44,16 +44,81 @@ if "autenticado" not in st.session_state:
 # ---------------------------------------------------------
 # PANTALLA DE INICIO DE SESIÓN (LOGIN)
 # ---------------------------------------------------------
+# ---------------------------------------------------------
+# PANTALLA DE INICIO DE SESIÓN ESTILIZADA
+# ---------------------------------------------------------
 def mostrar_login():
-    st.markdown("<h2 style='text-align: center;'>🛡️ SISTEMA INTEGRAL DE REGISTRO - GEAVIG</h2>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center; color: gray;'>Inicio de Sesión</h4>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        with st.form("form_login"):
-            usuario_input = st.text_input("Usuario").lower().strip()
-            password_input = st.text_input("Contraseña", type="password")
-            submitted = st.form_submit_button("🔑 INGRESAR AL SISTEMA", use_container_width=True, type="primary")
+    # Inyección de CSS para simular el diseño institucional
+    st.markdown("""
+        <style>
+            /* Fondo general claro */
+            .stApp {
+                background-color: #F8F9FA;
+            }
+            
+            /* Título principal en color Guinda */
+            .login-title {
+                color: #801538;
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+                font-size: 28px;
+                text-align: center;
+                margin-top: 10px;
+                margin-bottom: 25px;
+            }
+            
+            /* Personalización de los campos de entrada */
+            div[data-baseweb="input"] {
+                background-color: #E8F0FE !important;
+                border-radius: 6px !important;
+                border: 1px solid #C0C0C0 !important;
+            }
+            
+            /* Botón de ingreso en color Guinda con texto blanco */
+            div.stButton > button {
+                background-color: #801538 !important;
+                color: white !important;
+                border-radius: 8px !important;
+                border: none !important;
+                height: 45px !important;
+                font-weight: bold !important;
+                font-size: 16px !important;
+                margin-top: 15px !important;
+            }
+            
+            div.stButton > button:hover {
+                background-color: #60102A !important;
+                color: white !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Columnas para centrar la tarjeta de login
+    col_left, col_center, col_right = st.columns([1, 1.8, 1])
+
+    with col_center:
+        # Logos institucionales superiores
+        logo_c1, logo_c2 = st.columns(2)
+        with logo_c1:
+            if os.path.exists("logo_secretaria.png"):
+                st.image("logo_secretaria.png", use_container_width=True)
+            else:
+                st.markdown("<h4 style='text-align:center; color:#801538;'>SECRETARÍA</h4>", unsafe_allow_html=True)
+        
+        with logo_c2:
+            if os.path.exists("logo_geavig.png"):
+                st.image("logo_geavig.png", use_container_width=True)
+            else:
+                st.markdown("<h4 style='text-align:center; color:#801538;'>GEAVIG</h4>", unsafe_allow_html=True)
+
+        st.markdown("<div class='login-title'>Iniciar Sesión</div>", unsafe_allow_html=True)
+
+        # Formulario de credenciales
+        with st.form("form_login_custom", clear_on_submit=False):
+            usuario_input = st.text_input("Usuario", placeholder="Ingrese su usuario").lower().strip()
+            password_input = st.text_input("Contraseña", type="password", placeholder="••••••••••••")
+            
+            submitted = st.form_submit_button("Ingresar", use_container_width=True)
             
             if submitted:
                 if usuario_input in USUARIOS and USUARIOS[usuario_input]["password"] == password_input:
