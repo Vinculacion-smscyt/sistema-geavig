@@ -205,6 +205,7 @@ def generar_excel_bytes(df_datos: pd.DataFrame) -> bytes:
         df_datos.to_excel(writer, index=False, sheet_name='Capturas_GEAVIG')
     return output.getvalue()
 
+# POPUP DE CONFIRMACIÓN Y GUARDADO DE REGISTRO
 @st.dialog("🚨 ALERTA DE VALIDACIÓN DE INFORMACIÓN")
 def popup_confirmacion_guardado():
     st.markdown("""
@@ -221,11 +222,6 @@ def popup_confirmacion_guardado():
     with col_b1:
         if st.button("✅ CONFIRMAR Y GUARDAR", disabled=not confirmado_check, use_container_width=True):
             if st.session_state["temp_registro"]:
-                try:
-                    supabase.table("registros_geavig").insert(st.session_state["temp_registro"]).execute()
-                except Exception as e:
-                    st.error(f"Error al guardar en Supabase: {e}")
-                
                 st.session_state["registros_capturados"].append(st.session_state["temp_registro"])
                 st.session_state["temp_registro"] = {}
             
@@ -237,7 +233,7 @@ def popup_confirmacion_guardado():
             st.rerun()
 
 # ---------------------------------------------------------
-# PANTALLA DE INICIO DE SESIÓN (ESTILO ORIGINAL RESTAURADO)
+# PANTALLA DE INICIO DE SESIÓN
 # ---------------------------------------------------------
 USUARIOS = st.secrets.get("usuarios", {})
 
@@ -413,6 +409,7 @@ catalogos = cargar_catalogos()
 mapa_sectores = catalogos["SMZ_SECTOR"]
 lista_smz = ["SELECCIONAR..."] + sorted(list(mapa_sectores.keys())) if mapa_sectores else ["SELECCIONAR..."]
 
+# FID SIRVE PARA REINICIAR LAS CASILLAS CUANDO INCREMENTA EL CONTADOR FORM_ID
 fid = st.session_state["form_id"]
 
 # ---------------------------------------------------------
@@ -424,6 +421,7 @@ if st.session_state.get("registro_exitoso", False):
     st.success("✅ La información se ha guardado exitosamente y el formulario se ha limpiado.")
     st.session_state["registro_exitoso"] = False
 
+# PANEL DE CONTROL INTERNO PARA CAPTURISTA
 with st.expander(f"📥 CONTROL INTERNO DE CAPTURAS (`{len(st.session_state['registros_capturados'])}` folios guardados en esta sesión)", expanded=False):
     if st.session_state["registros_capturados"]:
         df_mis_capturas = pd.DataFrame(st.session_state["registros_capturados"])
@@ -448,6 +446,7 @@ else:
 with tab1:
     st.header("1. Datos Generales y Control de Tiempos")
     
+    # LÍNEA 1
     r1_col1, r1_col2, r1_col3, r1_col4 = st.columns(4)
     with r1_col1:
         capturista = st.text_input("Nombre del Capturista", value=st.session_state["nombre_usuario"], disabled=True, key=f"txt_capturista_disabled_{fid}")
@@ -462,6 +461,7 @@ with tab1:
     with r1_col4:
         reporte_911 = capturar_texto_validado("Folio / Reporte 911", key=f"txt_reporte_911_{fid}")
 
+    # LÍNEA 2
     r2_col1, r2_col2, r2_col3 = st.columns([1, 1, 2])
     with r2_col1:
         fecha_captura = st.date_input("Fecha de Captura", value=datetime.date.today(), disabled=True, key=f"f_cap_{fid}")
@@ -485,6 +485,7 @@ with tab1:
             else:
                 quien_reporta = quien_rep_sel
 
+    # LÍNEA 3
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
     with r3_col1:
         hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_{fid}")
@@ -505,6 +506,7 @@ with tab1:
 
         tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True, key=f"txt_tatencion_{fid}")
 
+    # LÍNEA 4
     r4_col1, r4_col2, r4_col3, r4_col4 = st.columns(4)
     with r4_col1:
         al_mando = capturar_texto_validado("Al Mando", key=f"txt_al_mando_{fid}")
@@ -517,17 +519,17 @@ with tab1:
     u1, u2, u3, u4 = st.columns(4)
     with u1:
         if mapa_sectores:
-            smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región *", lista_smz, key=f"sel_smz_{fid}")
+            smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región", lista_smz, key=f"sel_smz_{fid}")
             sector_calculado = mapa_sectores.get(smz_seleccionada, "") if smz_seleccionada != "SELECCIONAR..." else ""
         else:
-            smz_seleccionada = capturar_texto_validado("SMZ / Supermanzana *", key=f"txt_smz_{fid}")
+            smz_seleccionada = capturar_texto_validado("SMZ / Supermanzana", key=f"txt_smz_{fid}")
             sector_calculado = ""
 
         manzana = capturar_texto_validado("Manzana", key=f"txt_manzana_{fid}")
         lote = capturar_texto_validado("Lote", key=f"txt_lote_{fid}")
 
     with u2:
-        sector = st.text_input("Sector Asignado (Obligatorio) *", value=sector_calculado, disabled=True, key=f"txt_sec_{fid}")
+        sector = st.text_input("Sector Asignado (Automático)", value=sector_calculado, disabled=True, key=f"txt_sec_{fid}")
         calle = capturar_texto_validado("Calle", key=f"txt_calle_{fid}")
         colonia = capturar_texto_validado("Colonia / Fraccionamiento", key=f"txt_colonia_{fid}")
 
@@ -536,8 +538,8 @@ with tab1:
         referencia = capturar_texto_validado("Referencia del lugar", key=f"txt_referencia_{fid}")
 
     with u4:
-        longitud = capturar_texto_validado("Longitud *", key=f"txt_longitud_{fid}")
-        latitud = capturar_texto_validado("Latitud *", key=f"txt_latitud_{fid}")
+        longitud = capturar_texto_validado("Longitud", key=f"txt_longitud_{fid}")
+        latitud = capturar_texto_validado("Latitud", key=f"txt_latitud_{fid}")
 
     st.divider()
 
@@ -559,6 +561,7 @@ with tab1:
         else:
             vic_relacion_agresor = vic_rel_sel
 
+        # NACIONALIDAD VÍCTIMA
         vic_nac_sel = st.selectbox("Nacionalidad Víctima", catalogos["NACIONALIDAD"], key=f"vic_nac_sel_{fid}")
         if "EXTR" in vic_nac_sel:
             vic_nac_ext = capturar_texto_validado("Especifique País / Nacionalidad Extranjera (Víctima)", key=f"vic_nac_ext_{fid}")
@@ -591,6 +594,7 @@ with tab1:
         else:
             vic_grupo_vulnerable = vic_gv_sel
 
+        # ESCOLARIDAD VÍCTIMA
         vic_escolaridad = st.selectbox("Escolaridad Víctima", ["SIN ESCOLARIDAD", "PRIMARIA", "SECUNDARIA", "PREPARATORIA", "LICENCIATURA", "POSGRADO", "NO ESPECIFICA"], key=f"sel_vic_esc_{fid}")
 
         tiene_hijos = st.selectbox("¿Tiene Hijos?", ["NO", "SI"], key=f"sel_tiene_hijos_{fid}")
@@ -613,6 +617,7 @@ with tab1:
             with hc3:
                 h_sexo = st.selectbox(f"Sexo del Hijo(a) #{i+1}", ["FEMENINO", "MASCULINO", "OTRO"], key=f"hijo_sexo_{i}_{fid}")
             
+            # NACIONALIDAD HIJOS
             h_nac_sel = st.selectbox(f"Nacionalidad Hijo(a) #{i+1}", catalogos["NACIONALIDAD"], key=f"hijo_nac_{i}_{fid}")
             if "EXTR" in h_nac_sel:
                 h_nac_ext = capturar_texto_validado(f"Especifique País / Nacionalidad Extranjera Hijo(a) #{i+1}", key=f"hijo_ext_{i}_{fid}")
@@ -644,6 +649,7 @@ with tab1:
         with fa1_2:
             agr_sexo = st.selectbox("Sexo Agresor", ["MASCULINO", "FEMENINO", "SE DESCONOCE"], key=f"sel_agr_sexo_{fid}")
 
+        # NACIONALIDAD AGRESOR
         agr_nac_sel = st.selectbox("Nacionalidad Agresor", catalogos["NACIONALIDAD"], key=f"agr_nac_sel_{fid}")
         if "EXTR" in agr_nac_sel:
             agr_nac_ext = capturar_texto_validado("Especifique País / Nacionalidad Extranjera (Agresor)", key=f"agr_nac_ext_{fid}")
@@ -667,41 +673,231 @@ with tab1:
 
     with a2:
         agr_detenido = st.selectbox("¿Agresor Detenido?", ["NO", "SI", "SE DIO A LA FUGA"], key=f"sel_agr_det_{fid}")
+
+        # ESCOLARIDAD AGRESOR
         agr_escolaridad = st.selectbox("Escolaridad Agresor", ["SIN ESCOLARIDAD", "PRIMARIA", "SECUNDARIA", "PREPARATORIA", "LICENCIATURA", "POSGRADO", "SE DESCONOCE"], key=f"sel_agr_esc_{fid}")
 
     st.divider()
 
-    # Botón para preparar y validar registro
-    if st.button("💾 Validar y Guardar Registro", use_container_width=True):
-        errores = []
-        if smz_seleccionada == "SELECCIONAR..." or not smz_seleccionada.strip():
-            errores.append("La Supermanzana (SMZ) es obligatoria.")
-        if not sector_calculado.strip():
-            errores.append("El Sector Asignado es obligatorio.")
-        if not latitud.strip() or not longitud.strip():
-            errores.append("La Latitud y la Longitud son obligatorias para continuar.")
+    st.header("5. Clasificación de Violencia e IPH")
 
-        if errores:
-            for err in errores:
-                st.error(err)
+    se_elaboro_iph_val = st.session_state.get(f"se_elaboro_iph_{fid}", "SI")
+    iph_bloqueado = (se_elaboro_iph_val == "NO")
+
+    # FILA CONTINUA EN CASCADA PARA CLASIFICACIÓN DE VIOLENCIA
+    st.markdown("##### Tipología de Violencia (Cascada en Fila Continua)")
+    c_vio1, c_vio2, c_vio3 = st.columns(3)
+    
+    with c_vio1:
+        categoria_principal = st.selectbox("Categoría Principal", list(TAXONOMIA_VIOLENCIA.keys()), key=f"sel_cat_prin_{fid}")
+    
+    with c_vio2:
+        subcategorias_disponibles = list(TAXONOMIA_VIOLENCIA[categoria_principal].keys())
+        subcategoria_contexto = st.selectbox("Subcategoría / Contexto", subcategorias_disponibles, key=f"sel_subcat_{fid}")
+
+    with c_vio3:
+        conductas_disponibles = TAXONOMIA_VIOLENCIA[categoria_principal][subcategoria_contexto]
+        conducta_especifica = st.selectbox("Conducta Específica", conductas_disponibles, key=f"sel_cond_esp_{fid}")
+
+    st.markdown("---")
+
+    i1, i2, i3 = st.columns(3)
+    
+    with i1:
+        estatus_reporte = st.selectbox("Estatus del Reporte", ["CONCLUIDO", "PENDIENTE", "CANALIZADO", "EN PROCESO"], key=f"sel_est_rep_{fid}")
+        reporte_fue = st.selectbox("El Reporte fue", ["POSITIVO", "FALSO", "NO LOCALIZADO", "CANCELADO"], key=f"sel_rep_fue_{fid}")
+        hubo_victimas = st.selectbox("¿Hubo Víctimas?", ["SI", "NO"], key=f"sel_hubo_vic_{fid}")
+        cuantas_victimas = st.number_input("¿Cuántas Víctimas?", min_value=0, max_value=50, value=1, key=f"num_cant_vic_{fid}")
+        accion = capturar_texto_validado("Acción", key=f"txt_accion_{fid}")
+
+    with i2:
+        es_reiterado = st.selectbox("¿Es Reiterado?", catalogos["ES_REITERADO"], key=f"sel_reiterado_{fid}")
+
+        fr_sel = st.selectbox("Factor de Riesgo", catalogos["FACTOR_DE_RIESGO"], key=f"sel_fr_{fid}")
+        if fr_sel == "OTRO":
+            factor_riesgo = capturar_texto_validado("Especifique Factor de Riesgo", key=f"txt_fr_esp_{fid}")
         else:
-            st.session_state["temp_registro"] = {
-                "capturista": capturista,
-                "turno": turno,
-                "medio_reporte": medio_reporte,
-                "folio": reporte_911,
-                "fecha_captura": str(fecha_captura),
-                "fecha_reporte": str(fecha_reporte),
-                "quien_reporta": quien_reporta,
-                "hora_reporte": str(hora_reporte),
-                "hora_llegada": str(hora_llegada),
-                "hora_cierre": str(hora_cierre),
-                "tiempo_atencion": tiempo_calculado,
-                "al_mando": al_mando,
-                "unidad": unidad,
-                "smz": smz_seleccionada,
-                "sector": sector_calculado,
-                "latitud": latitud,
-                "longitud": longitud,
-            }
-            popup_confirmacion_guardado()
+            factor_riesgo = fr_sel
+
+        ta_sel = st.selectbox("Tipo de Atención", catalogos["TIPO_DE_ATENCION"], key=f"sel_ta_{fid}")
+        if ta_sel == "OTRO":
+            tipo_atencion = capturar_texto_validado("Especifique Tipo de Atención", key=f"txt_ta_esp_{fid}")
+        else:
+            tipo_atencion = ta_sel
+
+        mod_sel = st.selectbox("Modalidad", catalogos["MODALIDAD"], key=f"sel_mod_{fid}")
+        if mod_sel == "OTRO":
+            modalidad = capturar_texto_validado("Especifique Modalidad", key=f"txt_mod_esp_{fid}")
+        else:
+            modalidad = mod_sel
+
+        conducta = capturar_texto_validado("Conducta", key=f"txt_conducta_{fid}")
+
+    with i3:
+        nivel_riesgo = st.selectbox("Nivel de Riesgo", ["BAJO", "MEDIO", "ALTO", "CRITICO"], key=f"sel_riesgo_{fid}")
+
+        if iph_bloqueado:
+            probable_delito = st.text_input("Probable Delito", value="N/A", disabled=True, key=f"txt_delito_dis_{fid}")
+        else:
+            probable_delito = capturar_texto_validado("Probable Delito", key=f"txt_probable_delito_{fid}")
+
+        cuenta_red_apoyo = st.selectbox("¿Cuenta con Red de Apoyo?", ["NO", "SI"], key=f"sel_cred_{fid}")
+        if cuenta_red_apoyo == "SI":
+            red_apoyo_sel = st.selectbox("Red de Apoyo Canalizado", catalogos["RED_DE_APOYO"], key=f"sel_red_{fid}")
+            if red_apoyo_sel == "OTRO":
+                red_apoyo_esp = capturar_texto_validado("Especifique Red de Apoyo", key=f"txt_red_esp_{fid}")
+                red_de_apoyo_canalizado = red_apoyo_esp if red_apoyo_esp else "OTRO"
+            else:
+                red_de_apoyo_canalizado = red_apoyo_sel
+        else:
+            red_de_apoyo_canalizado = "NO APLICA"
+
+        primer_respondiente = capturar_texto_validado("Primer Respondiente", key=f"txt_primer_respondiente_{fid}")
+        se_elaboro_iph = st.selectbox("¿Se elaboró IPH?", ["SI", "NO"], key=f"se_elaboro_iph_{fid}")
+
+    # FILA PARA TURNADO Y DETALLES CONDICIONALES (FISCALÍA O JUEZ CÍVICO)
+    i4_1, i4_2 = st.columns(2)
+    with i4_1:
+        if iph_bloqueado:
+            num_iph = st.text_input("Número de IPH", value="N/A", disabled=True, key=f"txt_iph_dis_{fid}")
+            turnado = "NO TURNADO"
+            st.selectbox("Turnado a", ["NO TURNADO"], disabled=True, key=f"sel_tur_dis_{fid}")
+        else:
+            num_iph = capturar_texto_validado("Número de IPH", key=f"txt_num_iph_{fid}")
+            turnado_sel = st.selectbox("Turnado a", catalogos["TURNADO"], key=f"sel_turnado_{fid}")
+            if turnado_sel == "OTRO":
+                turnado_esp = capturar_texto_validado("Especifique Turnado", key=f"txt_turnado_esp_{fid}")
+                turnado = turnado_esp if turnado_esp else "OTRO"
+            else:
+                turnado = turnado_sel
+
+    with i4_2:
+        fiscalia_recibe = "N/A"
+        motivo_juez_civico = "N/A"
+
+        if not iph_bloqueado:
+            if turnado == "MINISTERIO PUBLICO":
+                st.markdown("**Fiscalía que Recibe:**")
+                fiscalia_sel = st.selectbox("Seleccione Fiscalía que recibe el caso", catalogos["FISCALIA"], key=f"fiscalia_full_{fid}")
+                if fiscalia_sel in ["OTRA", "OTRO"]:
+                    fiscalia_recibe = capturar_texto_validado("Especifique Fiscalía", key=f"fiscalia_esp_full_{fid}")
+                else:
+                    fiscalia_recibe = fiscalia_sel
+            elif turnado == "JUEZ CIVICO":
+                st.markdown("**Detalle de Turnado a Juez Cívico:**")
+                motivo_juez_civico = capturar_texto_validado("Motivo por el que fue turnado al JC", key=f"motivo_jc_{fid}")
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # 6. OBSERVACIONES Y NARRATIVA DEL REPORTE
+    # ---------------------------------------------------------
+    st.header("6. Observaciones y Narrativa del Reporte")
+    obs_col1, obs_col2 = st.columns([1, 2])
+
+    with obs_col1:
+        txt_obs = st.text_area("Observaciones (Máx. 200 caracteres)", max_chars=200, height=150, key=f"txt_observaciones_input_{fid}")
+        if tiene_acentos_o_minusculas(txt_obs):
+            popup_alerta_formato("Observaciones")
+        observaciones = normalizar(txt_obs)
+
+    with obs_col2:
+        txt_narrativa = st.text_area("Narrativa Completa del Reporte", height=150, key=f"txt_narrativa_input_{fid}")
+        if tiene_acentos_o_minusculas(txt_narrativa):
+            popup_alerta_formato("Narrativa Completa del Reporte")
+        narrativa_reporte = normalizar(txt_narrativa)
+
+    st.divider()
+
+    # BOTÓN PARA ALMACENAR DATOS TEMPORALES Y ABRIR POPUP DE CONFIRMACIÓN
+    if st.button("💾 GUARDAR REGISTRO EN EL SISTEMA", use_container_width=True):
+        st.session_state["temp_registro"] = {
+            "FECHA_CAPTURA": str(fecha_captura),
+            "CAPTURISTA": capturista,
+            "TURNO": turno,
+            "MEDIO_REPORTE": medio_reporte,
+            "FOLIO_911": reporte_911,
+            "FECHA_REPORTE": str(fecha_reporte),
+            "QUIEN_REPORTA": quien_reporta,
+            "HORA_REPORTE": str(hora_reporte),
+            "HORA_LLEGADA": str(hora_llegada),
+            "HORA_CIERRE": str(hora_cierre),
+            "TIEMPO_ATENCION": tiempo_atencion,
+            "AL_MANDO": al_mando,
+            "UNIDAD": unidad,
+            "SMZ": smz_seleccionada,
+            "SECTOR": sector_calculado,
+            "CALLE": calle,
+            "COLONIA": colonia,
+            "MANZANA": manzana,
+            "LOTE": lote,
+            "NO_EXT": no_ext,
+            "REFERENCIA": referencia,
+            "LONGITUD": longitud,
+            "LATITUD": latitud,
+            "VICTIMA_NOMBRE": vic_nombre,
+            "VICTIMA_EDAD": vic_edad,
+            "VICTIMA_SEXO": vic_sexo,
+            "VICTIMA_RELACION_AGRESOR": vic_relacion_agresor,
+            "VICTIMA_NACIONALIDAD": vic_nacionalidad,
+            "VICTIMA_ENTIDAD": vic_entidad_origen,
+            "VICTIMA_TRABAJA": vic_empleada,
+            "VICTIMA_OCUPACION": vic_ocupacion,
+            "VICTIMA_GRUPO_VULNERABLE": vic_grupo_vulnerable,
+            "VICTIMA_ESCOLARIDAD": vic_escolaridad,
+            "TIENE_HIJOS": tiene_hijos,
+            "NUM_HIJOS": num_hijos_val,
+            "HIJOS_DETALLE": hijos_resumen,
+            "AGRESOR_NOMBRE": agr_nombre,
+            "AGRESOR_EDAD": agr_edad,
+            "AGRESOR_SEXO": agr_sexo,
+            "AGRESOR_NACIONALIDAD": agr_nacionalidad,
+            "AGRESOR_ENTIDAD": agr_entidad_origen,
+            "AGRESOR_TRABAJA": agr_empleado,
+            "AGRESOR_OCUPACION": agr_ocupacion,
+            "AGRESOR_DETENIDO": agr_detenido,
+            "AGRESOR_ESCOLARIDAD": agr_escolaridad,
+            "CATEGORIA_PRINCIPAL": categoria_principal,
+            "SUBCATEGORIA_CONTEXTO": subcategoria_contexto,
+            "CONDUCTA_ESPECIFICA": conducta_especifica,
+            "ESTATUS_REPORTE": estatus_reporte,
+            "REPORTE_FUE": reporte_fue,
+            "HUBO_VICTIMAS": hubo_victimas,
+            "CANTIDAD_VICTIMAS": cuantas_victimas,
+            "ACCION": accion,
+            "ES_REITERADO": es_reiterado,
+            "FACTOR_RIESGO": factor_riesgo,
+            "TIPO_ATENCION": tipo_atencion,
+            "MODALIDAD": modalidad,
+            "CONDUCTA": conducta,
+            "NIVEL_RIESGO": nivel_riesgo,
+            "PROBABLE_DELITO": probable_delito,
+            "CUENTA_RED_APOYO": cuenta_red_apoyo,
+            "RED_APOYO": red_de_apoyo_canalizado,
+            "PRIMER_RESPONDIENTE": primer_respondiente,
+            "SE_ELABORO_IPH": se_elaboro_iph,
+            "NUM_IPH": num_iph,
+            "TURNADO_A": turnado,
+            "FISCALIA_RECIBE": fiscalia_recibe,
+            "MOTIVO_JUEZ_CIVICO": motivo_juez_civico,
+            "OBSERVACIONES": observaciones,
+            "NARRATIVA": narrativa_reporte
+        }
+        popup_confirmacion_guardado()
+
+# ---------------------------------------------------------
+# PESTAÑA DE COORDINACIÓN (SOLO EDITOR)
+# ---------------------------------------------------------
+if st.session_state["rol_usuario"] == "editor":  
+    with tab2:
+        st.header("📊 Panel de Coordinación y Exportación de Datos")
+        st.info("Vista para consulta general, métricas y descarga de reportes consolidados.")   
+        st.divider()
+        st.markdown("""
+        | Usuario | Contraseña | Rol | Permisos y Acceso |
+        | :--- | :--- | :--- | :--- |
+        | **editor** | `geavig2026admin` | Editor | Captura + Ver Base de Datos y Exportar Excel |
+        | **captura1** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        | **captura2** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        | **captura3** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
+        """)
