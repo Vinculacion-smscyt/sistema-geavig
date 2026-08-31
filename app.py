@@ -6,9 +6,10 @@ st.set_page_config(
     page_title="Sistema GEAVIG", page_icon="🛡️", layout="wide"
 )
 
-# Estilos CSS institucionales avanzados (Fondo púrpura, tipografía Montserrat y tarjeta de login centrada)
+# Estilos CSS institucionales envueltos correctamente
 st.markdown(
     """
+    <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
 
     html, body, [class*="css"] {
@@ -27,7 +28,7 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .header-text {
@@ -37,7 +38,7 @@ st.markdown(
     }
     .header-text h1 {
         font-family: 'Montserrat', sans-serif;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 700;
         color: white !important;
         margin: 0;
@@ -45,7 +46,7 @@ st.markdown(
     }
     .header-text h2 {
         font-family: 'Montserrat', sans-serif;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         color: #E1BEE7 !important;
         margin: 5px 0 0 0;
@@ -55,22 +56,18 @@ st.markdown(
     /* Tarjeta de Inicio de Sesión Centrada */
     .login-card {
         max-width: 450px;
-        margin: 50px auto;
-        padding: 40px;
+        margin: 30px auto 10px auto;
+        padding: 20px;
         background: #4A148C;
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         color: white;
         text-align: center;
     }
-    .login-card h2 {
+    .login-card h3 {
         color: white !important;
         font-family: 'Montserrat', sans-serif;
-        margin-bottom: 25px;
-    }
-    .login-card label {
-        color: white !important;
-        font-weight: 600;
+        margin: 0;
     }
 
     /* Estilo general de botones */
@@ -104,8 +101,8 @@ if "authenticated" not in st.session_state:
     st.session_state.rol = None
     st.session_state.nombre = None
 
-# Encabezado institucional fijo (Visible siempre)
-col_l1, col_t, col_l2 = st.columns([1, 4, 1])
+# Encabezado institucional fijo
+col_l1, col_t, col_l2 = st.columns([1, 5, 1])
 with col_l1:
     try:
         st.image("logo_secretaria.png", width=110)
@@ -114,7 +111,7 @@ with col_l1:
 with col_t:
     st.markdown(
         """
-        <div class="header-container" style="margin-bottom: 0px;">
+        <div class="header-container">
             <div class="header-text">
                 <h1>Secretaría Municipal de Seguridad Ciudadana y Tránsito</h1>
                 <h2>GEAVIG</h2>
@@ -129,20 +126,16 @@ with col_l2:
     except:
         st.write("")
 
-st.markdown("<br>", unsafe_allow_html=True)
-
 if not st.session_state.authenticated:
-    # Recuadro centrado para el acceso
     st.markdown(
         """
         <div class="login-card">
-            <h2>Acceso al Sistema</h2>
+            <h3>Acceso al Sistema</h3>
         </div>
     """,
         unsafe_allow_html=True,
     )
 
-    # Contenedor interactivo superpuesto para los inputs de Streamlit dentro del diseño
     c_pad1, c_login, c_pad2 = st.columns([1, 1.2, 1])
     with c_login:
         with st.form("login_form"):
@@ -203,7 +196,6 @@ with st.form("form_geavig"):
             "Tipo de Particular", ["VICTIMA", "TESTIGO", "TERCERO"]
         )
 
-        # Cálculo automático de tiempo de atención
         tiempo_atencion_str = "0 MIN"
         try:
             h_rep, m_rep = map(int, hora_reporte.split(":"))
