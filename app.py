@@ -31,7 +31,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inicializar conexión con Supabase desde los Secrets de Streamlit
+# Inicializar conexión con Supabase
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -42,6 +42,32 @@ if "authenticated" not in st.session_state:
     st.session_state.user = None
     st.session_state.rol = None
     st.session_state.nombre = None
+
+# Encabezado institucional con Logos fijos (Visible también en el login)
+col1, col2, col3 = st.columns([1, 3, 1])
+
+with col1:
+    st.image("logo_secretaria.png", width=120)
+
+with col2:
+    st.markdown(
+        "<h2"
+        " style='text-align:center; color:#4A148C;"
+        " margin-bottom:0;'>GEAVIG</h2>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p"
+        " style='text-align:center; color:#6A1B9A; font-weight:bold;"
+        " font-size:13px;'>Secretaría Municipal de Seguridad Ciudadana y"
+        " Tránsito</p>",
+        unsafe_allow_html=True,
+    )
+
+with col3:
+    st.image("logo_geavig.png", width=120)
+
+st.markdown("---")
 
 if not st.session_state.authenticated:
     st.title("🔐 Acceso al Sistema GEAVIG")
@@ -68,32 +94,6 @@ st.sidebar.write(f"**Rol:** {st.session_state.rol.capitalize()}")
 if st.sidebar.button("Cerrar Sesión"):
     st.session_state.authenticated = False
     st.rerun()
-
-# Encabezado institucional con Logos fijos y centrados
-col1, col2, col3 = st.columns([1, 3, 1])
-
-with col1:
-    st.image("logo_secretaria.png", width=120)
-
-with col2:
-    st.markdown(
-        "<h2"
-        " style='text-align:center; color:#4A148C;"
-        " margin-bottom:0;'>GEAVIG</h2>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "<p"
-        " style='text-align:center; color:#6A1B9A; font-weight:bold;"
-        " font-size:13px;'>Secretaría Municipal de Seguridad Ciudadana y"
-        " Tránsito</p>",
-        unsafe_allow_html=True,
-    )
-
-with col3:
-    st.image("logo_geavig.png", width=120)
-
-st.markdown("---")
 
 # Formulario principal de captura
 with st.form("form_geavig"):
