@@ -31,7 +31,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inicializar conexión con Supabase
+# Inicializar conexión con Supabase desde los Secrets de Streamlit
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -69,27 +69,29 @@ if st.sidebar.button("Cerrar Sesión"):
     st.session_state.authenticated = False
     st.rerun()
 
-# Encabezado institucional con Logos
-col_logo1, col_titulo, col_logo2 = st.columns([1, 4, 1])
-with col_logo1:
-    try:
-        st.image("logo_secretaria.png", use_container_width=True)
-    except:
-        st.write("🏛️")
-with col_titulo:
+# Encabezado institucional con Logos fijos y centrados
+col1, col2, col3 = st.columns([1, 3, 1])
+
+with col1:
+    st.image("logo_secretaria.png", width=120)
+
+with col2:
     st.markdown(
-        "<h2 style='text-align: center; color: #4A148C; margin-top: 10px;'>Sistema GEAVIG</h2>",
+        "<h2"
+        " style='text-align:center; color:#4A148C;"
+        " margin-bottom:0;'>GEAVIG</h2>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p style='text-align: center; color: #6A1B9A; font-weight: bold;'>Secretaría Municipal de Seguridad Ciudadana y Tránsito</p>",
+        "<p"
+        " style='text-align:center; color:#6A1B9A; font-weight:bold;"
+        " font-size:13px;'>Secretaría Municipal de Seguridad Ciudadana y"
+        " Tránsito</p>",
         unsafe_allow_html=True,
     )
-with col_logo2:
-    try:
-        st.image("logo_geavig.png", use_container_width=True)
-    except:
-        st.write("🛡️")
+
+with col3:
+    st.image("logo_geavig.png", width=120)
 
 st.markdown("---")
 
@@ -174,6 +176,7 @@ with st.form("form_geavig"):
     submitted = st.form_submit_button("Guardar Registro")
 
     if submitted:
+        # Validaciones estrictas obligatorias
         errores = []
         if not smz.strip():
             errores.append("La Supermanzana (SMZ) es obligatoria.")
