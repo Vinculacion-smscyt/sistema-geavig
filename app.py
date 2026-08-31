@@ -1,3 +1,4 @@
+import base64
 import streamlit as st
 from supabase import create_client
 
@@ -6,175 +7,178 @@ st.set_page_config(
     page_title="Sistema GEAVIG", page_icon="🛡️", layout="wide"
 )
 
-# Estilos CSS institucionales envueltos correctamente
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
-
-    html, body, [class*="css"] {
-        font-family: 'Montserrat', sans-serif;
-    }
-
-    .main {
-        background-color: #f8f9fa;
-    }
-
-    /* Franja de Encabezado Institucional */
-    .header-container {
-        background-color: #4A148C;
-        padding: 20px 30px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .header-text {
-        text-align: center;
-        flex-grow: 1;
-        color: white;
-    }
-    .header-text h1 {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 22px;
-        font-weight: 700;
-        color: white !important;
-        margin: 0;
-        padding: 0;
-    }
-    .header-text h2 {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 15px;
-        font-weight: 600;
-        color: #E1BEE7 !important;
-        margin: 5px 0 0 0;
-        padding: 0;
-    }
-
-    /* Tarjeta de Inicio de Sesión Centrada */
-    .login-card {
-        max-width: 450px;
-        margin: 30px auto 10px auto;
-        padding: 20px;
-        background: #4A148C;
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-        color: white;
-        text-align: center;
-    }
-    .login-card h3 {
-        color: white !important;
-        font-family: 'Montserrat', sans-serif;
-        margin: 0;
-    }
-
-    /* Estilo general de botones */
-    .stButton>button {
-        background-color: #7B1FA2;
-        color: white;
-        border-radius: 8px;
-        font-weight: bold;
-        font-family: 'Montserrat', sans-serif;
-        width: 100%;
-        border: 1px solid #9C27B0;
-    }
-    .stButton>button:hover {
-        background-color: #9C27B0;
-        color: white;
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
-
-# Inicializar conexión con Supabase
+# Inicializar conexión con Supabase desde los Secrets de Streamlit
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Control de Autenticación
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user = None
-    st.session_state.rol = None
-    st.session_state.nombre = None
 
-# Encabezado institucional fijo
-col_l1, col_t, col_l2 = st.columns([1, 5, 1])
-with col_l1:
+# Función auxiliar para convertir imágenes a base64 de manera segura
+def get_image_base64(path):
     try:
-        st.image("logo_secretaria.png", width=110)
-    except:
-        st.write("")
-with col_t:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    except Exception:
+        return None
+
+
+# Control de Autenticación - Estado inicial
+if "autenticado" not in st.session_state:
+    st.session_state["autenticado"] = False
+    st.session_state["usuario_actual"] = ""
+    st.session_state["nombre_usuario"] = ""
+    st.session_state["rol_usuario"] = ""
+    st.session_state["registro_exitoso"] = False
+    st.session_state["registros_capturados"] = []
+
+USUARIOS = st.secrets.get("usuarios", {})
+
+
+def mostrar_login():
     st.markdown(
         """
-        <div class="header-container">
-            <div class="header-text">
-                <h1>Secretaría Municipal de Seguridad Ciudadana y Tránsito</h1>
-                <h2>GEAVIG</h2>
+        <style>
+            .stApp {
+                background: linear-gradient(135deg, #2A0835 0%, #4A1259 50%, #170320 100%) !important;
+                background-attachment: fixed !important;
+            }
+            header, footer, #MainMenu { visibility: hidden; }
+
+            .inst-header { text-align: center; margin-top: 5px; margin-bottom: 25px; }
+            .inst-title {
+                color: #FFFFFF; font-family: 'Montserrat', Arial, sans-serif;
+                font-weight: 700; font-size: 26px; line-height: 1.15;
+                text-transform: uppercase; margin-bottom: 12px;
+            }
+            .inst-subtitle {
+                color: rgba(255, 255, 255, 0.95); font-family: 'Montserrat', Arial, sans-serif;
+                font-weight: 700; font-size: 24px; text-transform: uppercase; margin-bottom: 10px;
+            }
+            div[data-testid="stForm"] {
+                background: rgba(255, 255, 255, 0.08) !important;
+                backdrop-filter: blur(14px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.18) !important;
+                border-radius: 16px !important; padding: 30px 28px !important;
+            }
+            div[data-testid="stForm"] label { color: #FFFFFF !important; font-weight: 600 !important; }
+            div[data-baseweb="input"] { background-color: rgba(255, 255, 255, 0.95) !important; border-radius: 8px !important; }
+            div[data-baseweb="input"] input { color: #111827 !important; }
+            div.stButton > button {
+                background: linear-gradient(90deg, #801538 0%, #A31E48 100%) !important;
+                color: #FFFFFF !important; font-weight: 700 !important; height: 48px !important;
+                border-radius: 10px !important; text-transform: uppercase !important;
+            }
+            .login-card-title { color: #FFFFFF; font-weight: 700; font-size: 20px; text-align: center; margin-bottom: 22px; }
+            .logo-container { display: flex; justify-content: center; align-items: center; gap: 24px; margin-bottom: 12px; }
+            .logo-container img { width: 105px; height: auto; }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    col_left, col_center, col_right = st.columns([1, 1.8, 1])
+
+    with col_center:
+        b64_sec = get_image_base64("logo_secretaria.png")
+        b64_gea = get_image_base64("logo_geavig.png")
+
+        img_sec_html = (
+            f'<img src="data:image/png;base64,{b64_sec}" alt="Logo">'
+            if b64_sec
+            else '<span style="font-size:45px;">🛡️</span>'
+        )
+        img_gea_html = (
+            f'<img src="data:image/png;base64,{b64_gea}" alt="Logo">'
+            if b64_gea
+            else '<span style="font-size:45px;">⚖️</span>'
+        )
+
+        st.markdown(
+            f'<div class="logo-container">{img_sec_html}{img_gea_html}</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="inst-header">
+                <div class="inst-title">SECRETARÍA MUNICIPAL DE SEGURIDAD CIUDADANA Y TRÁNSITO DE BENITO JUÁREZ</div>
+                <div class="inst-subtitle">GEAVIG</div>
             </div>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-with col_l2:
-    try:
-        st.image("logo_geavig.png", width=110)
-    except:
-        st.write("")
+        """,
+            unsafe_allow_html=True,
+        )
 
-if not st.session_state.authenticated:
-    st.markdown(
-        """
-        <div class="login-card">
-            <h3>Acceso al Sistema</h3>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+        with st.form("form_login_geavig", clear_on_submit=False):
+            st.markdown(
+                "<div class='login-card-title'>Iniciar Sesión</div>",
+                unsafe_allow_html=True,
+            )
+            usuario_input = (
+                st.text_input("Usuario", placeholder="Ingrese su usuario")
+                .lower()
+                .strip()
+            )
+            password_input = st.text_input(
+                "Contraseña", type="password", placeholder="••••••••••••"
+            )
+            submitted = st.form_submit_button(
+                "INGRESAR AL SISTEMA", use_container_width=True
+            )
 
-    c_pad1, c_login, c_pad2 = st.columns([1, 1.2, 1])
-    with c_login:
-        with st.form("login_form"):
-            username = st.text_input("Usuario")
-            password = st.text_input("Contraseña", type="password")
-            submit_login = st.form_submit_button("Iniciar Sesión")
-
-            if submit_login:
-                usuarios = st.secrets.get("usuarios", {})
+            if submitted:
                 if (
-                    username in usuarios
-                    and usuarios[username]["password"] == password
+                    usuario_input in USUARIOS
+                    and USUARIOS[usuario_input]["password"] == password_input
                 ):
-                    st.session_state.authenticated = True
-                    st.session_state.user = username
-                    st.session_state.nombre = usuarios[username]["nombre"]
-                    st.session_state.rol = usuarios[username]["rol"]
+                    st.session_state["autenticado"] = True
+                    st.session_state["usuario_actual"] = usuario_input
+                    st.session_state["nombre_usuario"] = USUARIOS[
+                        usuario_input
+                    ]["nombre"]
+                    st.session_state["rol_usuario"] = USUARIOS[usuario_input][
+                        "rol"
+                    ]
+                    st.success(
+                        f"Bienvenido(a), {st.session_state['nombre_usuario']}"
+                    )
                     st.rerun()
                 else:
-                    st.error("Usuario o contraseña incorrectos")
+                    st.error("❌ Usuario o contraseña incorrectos")
+
+
+if not st.session_state["autenticado"]:
+    mostrar_login()
     st.stop()
 
-# Barra lateral con información del usuario
-st.sidebar.title("Panel GEAVIG")
-st.sidebar.write(f"**Usuario:** {st.session_state.nombre}")
-st.sidebar.write(f"**Rol:** {st.session_state.rol.capitalize()}")
+# ---------------------------------------------------------
+# BARRA LATERAL (CERRAR SESIÓN Y PERFIL)
+# ---------------------------------------------------------
+with st.sidebar:
+    st.markdown(f"👤 **Usuario:** {st.session_state['nombre_usuario']}")
+    st.markdown(f"🏷️ **Rol:** {st.session_state['rol_usuario'].upper()}")
+    st.divider()
+    if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        st.session_state["autenticado"] = False
+        st.session_state["usuario_actual"] = ""
+        st.session_state["nombre_usuario"] = ""
+        st.session_state["rol_usuario"] = ""
+        st.session_state["registro_exitoso"] = False
+        st.session_state["registros_capturados"] = []
+        st.rerun()
 
-if st.sidebar.button("Cerrar Sesión"):
-    st.session_state.authenticated = False
-    st.rerun()
+# ---------------------------------------------------------
+# FORMULARIO PRINCIPAL DE CAPTURA GEAVIG
+# ---------------------------------------------------------
+st.title("Sistema GEAVIG - Registro de Servicios")
 
-# Formulario principal de captura
 with st.form("form_geavig"):
     st.subheader("1. Datos Generales y Control de Tiempos")
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         capturista = st.text_input(
-            "Nombre del Capturista", value=st.session_state.nombre, disabled=True
+            "Nombre del Capturista",
+            value=st.session_state["nombre_usuario"],
+            disabled=True,
         )
         fecha_captura = st.date_input("Fecha de Captura")
         hora_reporte = st.text_input("Hora del Reporte (HH:MM)", value="13:00")
@@ -196,6 +200,7 @@ with st.form("form_geavig"):
             "Tipo de Particular", ["VICTIMA", "TESTIGO", "TERCERO"]
         )
 
+        # Cálculo automático de tiempo de atención
         tiempo_atencion_str = "0 MIN"
         try:
             h_rep, m_rep = map(int, hora_reporte.split(":"))
@@ -244,9 +249,9 @@ with st.form("form_geavig"):
     with u9:
         colonia = st.text_input("Colonia / Fraccionamiento")
 
-    submitted = st.form_submit_button("Guardar Registro")
+    submitted_registro = st.form_submit_button("Guardar Registro")
 
-    if submitted:
+    if submitted_registro:
         errores = []
         if not smz.strip():
             errores.append("La Supermanzana (SMZ) es obligatoria.")
