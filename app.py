@@ -461,31 +461,7 @@ with tab1:
     with r1_col4:
         reporte_911 = capturar_texto_validado("Folio / Reporte 911", key=f"txt_reporte_911_{fid}")
         
-# LÍNEA 3 (TIEMPOS)
-    r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
-    with r3_col1:
-        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_time_{fid}")
-    with r3_col2:
-        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_time_{fid}")
-    with r3_col3:
-        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_time_{fid}")
-    with r3_col4:
-        dt_llegada = datetime.datetime.combine(fecha_reporte, hora_llegada)
-        dt_cierre = datetime.datetime.combine(fecha_reporte, hora_cierre)
-        if dt_cierre < dt_llegada:
-            dt_cierre += datetime.timedelta(days=1)
-
-        minutos_totales = int((dt_cierre - dt_llegada).total_seconds() / 60)
-        if minutos_totales < 0:
-            minutos_totales = 0
-            
-        horas_calc = minutos_totales // 60
-        mins_calc = minutos_totales % 60
-        tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
-
-        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True, key=f"txt_tatencion_{fid}")
-        
-    # LÍNEA 2
+       # LÍNEA 2 (Asegúrate de que esta esté primero para que exista 'fecha_reporte')
     r2_col1, r2_col2, r2_col3 = st.columns([1, 1, 2])
     with r2_col1:
         fecha_captura = st.date_input("Fecha de Captura", value=datetime.date.today(), disabled=True, key=f"f_cap_{fid}")
@@ -509,14 +485,14 @@ with tab1:
             else:
                 quien_reporta = quien_rep_sel
 
-    # LÍNEA 3 (TIEMPOS)
+    # LÍNEA 3 (Única vez: Tiempos y cálculo automático)
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
     with r3_col1:
-        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_{fid}")
+        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_time_{fid}")
     with r3_col2:
-        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_{fid}")
+        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_time_{fid}")
     with r3_col3:
-        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_{fid}")
+        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_time_{fid}")
     with r3_col4:
         dt_llegada = datetime.datetime.combine(fecha_reporte, hora_llegada)
         dt_cierre = datetime.datetime.combine(fecha_reporte, hora_cierre)
