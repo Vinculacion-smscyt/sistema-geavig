@@ -105,7 +105,6 @@ SECTORES_MAP = {
     "60": "SECTOR 1", "61": "SECTOR 1", "62": "SECTOR 1", "63": "SECTOR 1", "64": "SECTOR 1", "65": "SECTOR 1",
     "66": "SECTOR 1", "67": "SECTOR 1", "68": "SECTOR 1", "69": "SECTOR 1", "70": "SECTOR 1", "71": "SECTOR 1",
     "72": "SECTOR 1", "73": "SECTOR 1", "74": "SECTOR 1", "75": "SECTOR 1", "76": "SECTOR 1", "77": "SECTOR 1",
-    # Puedes ampliar o ajustar según los sectores reales de Benito Juárez
 }
 
 # Formulario principal de captura
@@ -172,7 +171,6 @@ with st.form("form_geavig"):
     with u1:
         smz = st.text_input("SMZ / Supermanzana / Región *")
     with u2:
-        # Autollenado del sector según la SMZ ingresada (si existe en el diccionario, de lo contrario campo libre)
         smz_key = smz.strip().upper()
         sector_sugerido = SECTORES_MAP.get(smz_key, "")
         sector = st.text_input("Sector Asignado (Obligatorio) *", value=sector_sugerido)
@@ -198,7 +196,6 @@ with st.form("form_geavig"):
     submitted = st.form_submit_button("Guardar Registro")
 
     if submitted:
-        # Validaciones estrictas obligatorias (incluyendo Longitud y Latitud)
         errores = []
         if not smz.strip():
             errores.append("La Supermanzana (SMZ) es obligatoria.")
