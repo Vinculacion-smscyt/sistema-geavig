@@ -6,24 +6,85 @@ st.set_page_config(
     page_title="Sistema GEAVIG", page_icon="🛡️", layout="wide"
 )
 
-# Estilos CSS institucionales (Tonos Morados)
+# Estilos CSS institucionales avanzados (Fondo púrpura, tipografía Montserrat y tarjeta de login centrada)
 st.markdown(
     """
-    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Montserrat', sans-serif;
+    }
+
     .main {
         background-color: #f8f9fa;
     }
-    h1, h2, h3 {
-        color: #4A148C !important;
+
+    /* Franja de Encabezado Institucional */
+    .header-container {
+        background-color: #4A148C;
+        padding: 20px 30px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+    .header-text {
+        text-align: center;
+        flex-grow: 1;
+        color: white;
+    }
+    .header-text h1 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: white !important;
+        margin: 0;
+        padding: 0;
+    }
+    .header-text h2 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: #E1BEE7 !important;
+        margin: 5px 0 0 0;
+        padding: 0;
+    }
+
+    /* Tarjeta de Inicio de Sesión Centrada */
+    .login-card {
+        max-width: 450px;
+        margin: 50px auto;
+        padding: 40px;
+        background: #4A148C;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        color: white;
+        text-align: center;
+    }
+    .login-card h2 {
+        color: white !important;
+        font-family: 'Montserrat', sans-serif;
+        margin-bottom: 25px;
+    }
+    .login-card label {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    /* Estilo general de botones */
     .stButton>button {
-        background-color: #6A1B9A;
+        background-color: #7B1FA2;
         color: white;
         border-radius: 8px;
         font-weight: bold;
+        font-family: 'Montserrat', sans-serif;
+        width: 100%;
+        border: 1px solid #9C27B0;
     }
     .stButton>button:hover {
-        background-color: #4A148C;
+        background-color: #9C27B0;
         color: white;
     }
     </style>
@@ -43,47 +104,65 @@ if "authenticated" not in st.session_state:
     st.session_state.rol = None
     st.session_state.nombre = None
 
-# Encabezado institucional con Logos fijos (Visible también en el login)
-col1, col2, col3 = st.columns([1, 3, 1])
-
-with col1:
-    st.image("logo_secretaria.png", width=120)
-
-with col2:
+# Encabezado institucional fijo (Visible siempre)
+col_l1, col_t, col_l2 = st.columns([1, 4, 1])
+with col_l1:
+    try:
+        st.image("logo_secretaria.png", width=110)
+    except:
+        st.write("")
+with col_t:
     st.markdown(
-        "<h2"
-        " style='text-align:center; color:#4A148C;"
-        " margin-bottom:0;'>GEAVIG</h2>",
+        """
+        <div class="header-container" style="margin-bottom: 0px;">
+            <div class="header-text">
+                <h1>Secretaría Municipal de Seguridad Ciudadana y Tránsito</h1>
+                <h2>GEAVIG</h2>
+            </div>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        "<p"
-        " style='text-align:center; color:#6A1B9A; font-weight:bold;"
-        " font-size:13px;'>Secretaría Municipal de Seguridad Ciudadana y"
-        " Tránsito</p>",
-        unsafe_allow_html=True,
-    )
+with col_l2:
+    try:
+        st.image("logo_geavig.png", width=110)
+    except:
+        st.write("")
 
-with col3:
-    st.image("logo_geavig.png", width=120)
-
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
 if not st.session_state.authenticated:
-    st.title("🔐 Acceso al Sistema GEAVIG")
-    username = st.text_input("Usuario")
-    password = st.text_input("Contraseña", type="password")
+    # Recuadro centrado para el acceso
+    st.markdown(
+        """
+        <div class="login-card">
+            <h2>Acceso al Sistema</h2>
+        </div>
+    """,
+        unsafe_allow_html=True,
+    )
 
-    if st.button("Iniciar Sesión"):
-        usuarios = st.secrets.get("usuarios", {})
-        if username in usuarios and usuarios[username]["password"] == password:
-            st.session_state.authenticated = True
-            st.session_state.user = username
-            st.session_state.nombre = usuarios[username]["nombre"]
-            st.session_state.rol = usuarios[username]["rol"]
-            st.rerun()
-        else:
-            st.error("Usuario o contraseña incorrectos")
+    # Contenedor interactivo superpuesto para los inputs de Streamlit dentro del diseño
+    c_pad1, c_login, c_pad2 = st.columns([1, 1.2, 1])
+    with c_login:
+        with st.form("login_form"):
+            username = st.text_input("Usuario")
+            password = st.text_input("Contraseña", type="password")
+            submit_login = st.form_submit_button("Iniciar Sesión")
+
+            if submit_login:
+                usuarios = st.secrets.get("usuarios", {})
+                if (
+                    username in usuarios
+                    and usuarios[username]["password"] == password
+                ):
+                    st.session_state.authenticated = True
+                    st.session_state.user = username
+                    st.session_state.nombre = usuarios[username]["nombre"]
+                    st.session_state.rol = usuarios[username]["rol"]
+                    st.rerun()
+                else:
+                    st.error("Usuario o contraseña incorrectos")
     st.stop()
 
 # Barra lateral con información del usuario
@@ -176,7 +255,6 @@ with st.form("form_geavig"):
     submitted = st.form_submit_button("Guardar Registro")
 
     if submitted:
-        # Validaciones estrictas obligatorias
         errores = []
         if not smz.strip():
             errores.append("La Supermanzana (SMZ) es obligatoria.")
