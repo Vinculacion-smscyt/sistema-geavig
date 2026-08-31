@@ -485,14 +485,14 @@ with tab1:
             else:
                 quien_reporta = quien_rep_sel
 
-    # LÍNEA 3 (Única vez: Tiempos y cálculo automático)
+   # LÍNEA 3 (TIEMPOS)
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
     with r3_col1:
-        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_time_{fid}")
+        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_f_{fid}")
     with r3_col2:
-        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_time_{fid}")
+        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_f_{fid}")
     with r3_col3:
-        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_time_{fid}")
+        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_f_{fid}")
     with r3_col4:
         dt_llegada = datetime.datetime.combine(fecha_reporte, hora_llegada)
         dt_cierre = datetime.datetime.combine(fecha_reporte, hora_cierre)
@@ -507,8 +507,8 @@ with tab1:
         mins_calc = minutos_totales % 60
         tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
 
-        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True, key=f"txt_tatencion_{fid}")
-
+        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True, key=f"txt_tatencion_final_{fid}")
+        
     # LÍNEA 4
     r4_col1, r4_col2, r4_col3, r4_col4 = st.columns(4)
     with r4_col1:
