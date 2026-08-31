@@ -1,10 +1,34 @@
-import streamlit as datetime_utils  # Solo referencia interna
 import streamlit as st
 from supabase import create_client
 
 # Configuración de la página
 st.set_page_config(
     page_title="Sistema GEAVIG", page_icon="🛡️", layout="wide"
+)
+
+# Estilos CSS personalizados para el tema institucional GEAVIG (Tonos Morados)
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    h1, h2, h3 {
+        color: #4A148C !important;
+    }
+    .stButton>button {
+        background-color: #6A1B9A;
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #4A148C;
+        color: white;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
 )
 
 # Inicializar conexión con Supabase desde los Secrets de Streamlit
@@ -45,7 +69,10 @@ if st.sidebar.button("Cerrar Sesión"):
     st.session_state.authenticated = False
     st.rerun()
 
-st.title("📋 Registro Diario de Atenciones - GEAVIG")
+st.markdown(
+    "<h1 style='color: #4A148C;'>🛡️ Sistema GEAVIG - Secretaría Municipal de Seguridad Ciudadana y Tránsito</h1>",
+    unsafe_allow_html=True,
+)
 
 # Formulario principal de captura
 with st.form("form_geavig"):
@@ -83,7 +110,7 @@ with st.form("form_geavig"):
             h_cie, m_cie = map(int, hora_cierre.split(":"))
             total_min = (h_cie * 60 + m_cie) - (h_rep * 60 + m_rep)
             if total_min < 0:
-                total_min += 24 * 60  # Ajuste por cambio de día
+                total_min += 24 * 60
             tiempo_atencion_str = f"{total_min} MIN"
         except:
             tiempo_atencion_str = "Error formato"
@@ -128,7 +155,6 @@ with st.form("form_geavig"):
     submitted = st.form_submit_button("Guardar Registro")
 
     if submitted:
-        # Validaciones obligatorias exigidas
         errores = []
         if not smz.strip():
             errores.append("La Supermanzana (SMZ) es obligatoria.")
@@ -143,7 +169,6 @@ with st.form("form_geavig"):
             for err in errores:
                 st.error(err)
         else:
-            # Intentar guardar en Supabase
             try:
                 data = {
                     "capturista": capturista,
