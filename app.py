@@ -6,7 +6,7 @@ st.set_page_config(
     page_title="Sistema GEAVIG", page_icon="🛡️", layout="wide"
 )
 
-# Estilos CSS personalizados para el tema institucional GEAVIG (Tonos Morados)
+# Estilos CSS institucionales (Tonos Morados)
 st.markdown(
     """
     <style>
@@ -31,7 +31,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inicializar conexión con Supabase desde los Secrets de Streamlit
+# Inicializar conexión con Supabase
 SUPABASE_URL = st.secrets["supabase"]["url"]
 SUPABASE_KEY = st.secrets["supabase"]["key"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -69,10 +69,29 @@ if st.sidebar.button("Cerrar Sesión"):
     st.session_state.authenticated = False
     st.rerun()
 
-st.markdown(
-    "<h1 style='color: #4A148C;'>🛡️ Sistema GEAVIG - Secretaría Municipal de Seguridad Ciudadana y Tránsito</h1>",
-    unsafe_allow_html=True,
-)
+# Encabezado institucional con Logos
+col_logo1, col_titulo, col_logo2 = st.columns([1, 4, 1])
+with col_logo1:
+    try:
+        st.image("logo_secretaria.png", use_container_width=True)
+    except:
+        st.write("🏛️")
+with col_titulo:
+    st.markdown(
+        "<h2 style='text-align: center; color: #4A148C; margin-top: 10px;'>Sistema GEAVIG</h2>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='text-align: center; color: #6A1B9A; font-weight: bold;'>Secretaría Municipal de Seguridad Ciudadana y Tránsito</p>",
+        unsafe_allow_html=True,
+    )
+with col_logo2:
+    try:
+        st.image("logo_geavig.png", use_container_width=True)
+    except:
+        st.write("🛡️")
+
+st.markdown("---")
 
 # Formulario principal de captura
 with st.form("form_geavig"):
