@@ -485,7 +485,7 @@ with tab1:
             else:
                 quien_reporta = quien_rep_sel
 
-    # LÍNEA 3
+# LÍNEA 3
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
     with r3_col1:
         hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_{fid}")
@@ -494,12 +494,15 @@ with tab1:
     with r3_col3:
         hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_{fid}")
     with r3_col4:
-        dt_llegada = datetime.datetime.combine(datetime.date.today(), hora_llegada)
-        dt_cierre = datetime.datetime.combine(datetime.date.today(), hora_cierre)
+        dt_llegada = datetime.datetime.combine(fecha_reporte, hora_llegada)
+        dt_cierre = datetime.datetime.combine(fecha_reporte, hora_cierre)
         if dt_cierre < dt_llegada:
             dt_cierre += datetime.timedelta(days=1)
 
         minutos_totales = int((dt_cierre - dt_llegada).total_seconds() / 60)
+        if minutos_totales < 0:
+            minutos_totales = 0
+            
         horas_calc = minutos_totales // 60
         mins_calc = minutos_totales % 60
         tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
@@ -520,7 +523,8 @@ with tab1:
     with u1:
         if mapa_sectores:
             smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región", lista_smz, key=f"sel_smz_{fid}")
-            sector_calculado = mapa_sectores.get(smz_seleccionada, "") if smz_seleccionada != "SELECCIONAR..." else ""
+            smz_key_limpia = normalizar(smz_seleccionada)
+            sector_calculado = mapa_sectores.get(smz_key_limpia, "") if smz_seleccionada != "SELECCIONAR..." else ""
         else:
             smz_seleccionada = capturar_texto_validado("SMZ / Supermanzana", key=f"txt_smz_{fid}")
             sector_calculado = ""
@@ -530,8 +534,6 @@ with tab1:
 
     with u2:
         sector = st.text_input("Sector Asignado (Automático)", value=sector_calculado, disabled=True, key=f"txt_sec_{fid}")
-        calle = capturar_texto_validado("Calle", key=f"txt_calle_{fid}")
-        colonia = capturar_texto_validado("Colonia / Fraccionamiento", key=f"txt_colonia_{fid}")
 
     with u3:
         no_ext = capturar_texto_validado("No. Exterior", key=f"txt_no_ext_{fid}")
