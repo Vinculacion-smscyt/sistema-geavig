@@ -493,8 +493,11 @@ with tab1:
     with r3_col3:
         hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_{fid}")
     with r3_col4:
-        dt_llegada = datetime.datetime.combine(fecha_reporte, hora_llegada)
-        dt_cierre = datetime.datetime.combine(fecha_reporte, hora_cierre)
+        # Cálculo dinámico robusto de la diferencia de tiempos
+        dt_llegada = datetime.datetime.combine(datetime.date.today(), hora_llegada)
+        dt_cierre = datetime.datetime.combine(datetime.date.today(), hora_cierre)
+        
+        # Si la hora de cierre es menor a la de llegada, asumimos que cruzó la medianoche (día siguiente)
         if dt_cierre < dt_llegada:
             dt_cierre += datetime.timedelta(days=1)
 
@@ -504,10 +507,14 @@ with tab1:
             
         horas_calc = minutos_totales // 60
         mins_calc = minutos_totales % 60
-        tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
+        
+        if horas_calc > 0:
+            tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN"
+        else:
+            tiempo_calculado = f"{mins_calc} MIN"
 
-        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True, key=f"txt_tatencion_{fid}")
-
+        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, key=f"txt_tatencion_{fid}", disabled=True)
+        
     # LÍNEA 4
     r4_col1, r4_col2, r4_col3, r4_col4 = st.columns(4)
     with r4_col1:
