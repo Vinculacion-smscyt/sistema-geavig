@@ -484,30 +484,14 @@ with tab1:
             else:
                 quien_reporta = quien_rep_sel
 
-    # LÍNEA 3 (TIEMPOS CON SELECTORES INSTANTÁNEOS)
+  # LÍNEA 3 (TIEMPOS CON FORMATO H:M Y RECARGA AUTOMÁTICA)
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
-    
-    horas_opciones = list(range(24))
-    minutos_opciones = list(range(60))
-
     with r3_col1:
-        st.markdown("**Hora del Reporte**")
-        h_rep = st.selectbox("H. Rep", horas_opciones, key=f"h_rep_{fid}")
-        m_rep = st.selectbox("M. Rep", minutos_opciones, key=f"m_rep_{fid}")
-        hora_reporte = datetime.time(h_rep, m_rep)
-
+        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_{fid}")
     with r3_col2:
-        st.markdown("**Hora de Llegada**")
-        h_lleg = st.selectbox("H. Llegada", horas_opciones, index=7, key=f"h_lleg_{fid}")
-        m_lleg = st.selectbox("M. Llegada", minutos_opciones, key=f"m_lleg_{fid}")
-        hora_llegada = datetime.time(h_lleg, m_lleg)
-
+        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_{fid}", on_change=lambda: None)
     with r3_col3:
-        st.markdown("**Hora de Cierre**")
-        h_cier = st.selectbox("H. Cierre", horas_opciones, index=10, key=f"h_cier_{fid}")
-        m_cier = st.selectbox("M. Cierre", minutos_opciones, index=30, key=f"m_cier_{fid}")
-        hora_cierre = datetime.time(h_cier, m_cier)
-
+        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_{fid}", on_change=lambda: None)
     with r3_col4:
         dt_llegada = datetime.datetime.combine(datetime.date.today(), hora_llegada)
         dt_cierre = datetime.datetime.combine(datetime.date.today(), hora_cierre)
@@ -523,9 +507,7 @@ with tab1:
         mins_calc = minutos_totales % 60
         
         tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
-        
-        st.markdown("**Tiempo de Atención (Automático)**")
-        tiempo_atencion = st.text_input("Tiempo", value=tiempo_calculado, label_visibility="collapsed", key=f"txt_tatencion_{fid}", disabled=True)
+        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, key=f"txt_tatencion_{fid}", disabled=True)
         
     # LÍNEA 4
     r4_col1, r4_col2, r4_col3, r4_col4 = st.columns(4)
