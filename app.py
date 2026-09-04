@@ -486,13 +486,7 @@ with tab1:
 
   # LÍNEA 3 (TIEMPOS CON FORMATO H:M Y RECARGA AUTOMÁTICA)
     r3_col1, r3_col2, r3_col3, r3_col4 = st.columns(4)
-    with r3_col1:
-        hora_reporte = st.time_input("Hora del Reporte", datetime.time(0, 0), key=f"hr_rep_{fid}")
-    with r3_col2:
-        hora_llegada = st.time_input("Hora de Llegada", datetime.time(0, 0), key=f"hr_lleg_{fid}", on_change=lambda: None)
-    with r3_col3:
-        hora_cierre = st.time_input("Hora de Cierre", datetime.time(0, 0), key=f"hr_cier_{fid}", on_change=lambda: None)
-    with r3_col4:
+   with r3_col4:
         dt_llegada = datetime.datetime.combine(datetime.date.today(), hora_llegada)
         dt_cierre = datetime.datetime.combine(datetime.date.today(), hora_cierre)
         
@@ -507,7 +501,9 @@ with tab1:
         mins_calc = minutos_totales % 60
         
         tiempo_calculado = f"{horas_calc} HRS {mins_calc} MIN" if horas_calc > 0 else f"{mins_calc} MIN"
-        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, key=f"txt_tatencion_{fid}", disabled=True)
+        
+        # Se eliminó el parámetro 'key' para permitir que el valor se actualice dinámicamente en pantalla
+        tiempo_atencion = st.text_input("Tiempo de Atención (Automático)", value=tiempo_calculado, disabled=True)
         
     # LÍNEA 4
     r4_col1, r4_col2, r4_col3, r4_col4 = st.columns(4)
