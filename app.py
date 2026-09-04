@@ -181,8 +181,12 @@ def normalizar(texto) -> str:
 
 def capturar_texto_validado(label: str, key: str, value: str = "", disabled: bool = False) -> str:
     val_ingresado = st.text_input(label, value=value, key=key, disabled=disabled)
-    if not disabled and tiene_acentos_o_minusculas(val_ingresado):
-        st.markdown(f"<p style='color: #b45309; font-size: 11px; margin-top: -15px; margin-bottom: 10px;'>⚠️ <i>Se detectaron minúsculas o acentos (convertido automáticamente a mayúsculas sin acentos).</i></p>", unsafe_allow_html=True)
+    
+    if not disabled and val_ingresado:
+        if tiene_acentos_o_minusculas(val_ingresado):
+            st.error(f"❌ Error en '{label}': No se permiten minúsculas ni acentos. Corrige este campo para continuar.")
+            st.stop()  # Detiene la ejecución aquí mismo y bloquea el avance
+            
     return normalizar(val_ingresado)
 
 def get_image_base64(ruta_imagen: str) -> str:
@@ -796,14 +800,16 @@ with tab1:
 
     with obs_col1:
         txt_obs = st.text_area("Observaciones (Máx. 200 caracteres)", max_chars=200, height=150, key=f"txt_observaciones_input_{fid}")
-        if tiene_acentos_o_minusculas(txt_obs):
-            st.markdown(f"<p style='color: #b45309; font-size: 11px;'>⚠️ <i>Se detectaron minúsculas o acentos en Observaciones (convertido automáticamente).</i></p>", unsafe_allow_html=True)
+        if txt_obs and tiene_acentos_o_minusculas(txt_obs):
+            st.error("❌ Error en Observaciones: Contiene minúsculas o acentos. Corrígelo para continuar.")
+            st.stop()
         observaciones = normalizar(txt_obs)
 
     with obs_col2:
         txt_narrativa = st.text_area("Narrativa Completa del Reporte", height=150, key=f"txt_narrativa_input_{fid}")
-        if tiene_acentos_o_minusculas(txt_narrativa):
-            st.markdown(f"<p style='color: #b45309; font-size: 11px;'>⚠️ <i>Se detectaron minúsculas o acentos en la Narrativa (convertido automáticamente).</i></p>", unsafe_allow_html=True)
+        if txt_narrativa and tiene_acentos_o_minusculas(txt_narrativa):
+            st.error("❌ Error en Narrativa: Contiene minúsculas o acentos. Corrígelo para continuar.")
+            st.stop()
         narrativa_reporte = normalizar(txt_narrativa)
 
     st.divider()
