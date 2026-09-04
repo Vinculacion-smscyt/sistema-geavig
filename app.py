@@ -181,11 +181,24 @@ def normalizar(texto) -> str:
 
 @st.dialog("⚠️ ALERTA DE FORMATO")
 def popup_alerta_formato(campo_nombre: str):
-    st.warning("⚠️ VERIFICAR QUE NO LLEVE ACENTUACIÓN Y TODO ESTÉ EN MAYÚSCULAS")
-    st.write(f"Se detectaron minúsculas o acentos en el campo: **{campo_nombre}**.")
-    st.caption("El texto se convierte automáticamente al formato normado sin acentos y en mayúsculas.")
-    if st.button("Verificar y Continuar", key=f"btn_alerta_cont_{campo_nombre}", use_container_width=True):
-        st.rerun()
+    st.markdown("""
+        <div style="background-color: #FFF3CD; border: 2px solid #FFECB5; border-radius: 10px; padding: 14px; margin-bottom: 12px; text-align: center;">
+            <p style="color: #842029; font-size: 14px; font-weight: 700; margin: 0;">
+                ⚠️ VERIFICAR QUE NO LLEVE ACENTUACIÓN Y TODO ESTÉ EN MAYÚSCULAS
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"<p style='text-align: center; font-size: 15px;'>Se detectaron minúsculas o acentos en el campo:<br><b>{campo_nombre}</b>.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: gray; font-size: 13px;'>El texto se convierte automáticamente al formato normado sin acentos y en mayúsculas.</p>", unsafe_allow_html=True)
+    
+    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+    
+    # Se usa un formulario dentro del diálogo para asegurar que el botón procese el rerun de inmediato
+    with st.form(f"form_dialog_alerta_{campo_nombre}"):
+        submitted_alerta = st.form_submit_button("VERIFICAR Y CONTINUAR", use_container_width=True)
+        if submitted_alerta:
+            st.rerun()
 
 def capturar_texto_validado(label: str, key: str, value: str = "", disabled: bool = False) -> str:
     val_ingresado = st.text_input(label, value=value, key=key, disabled=disabled)
