@@ -518,22 +518,22 @@ with tab1:
 
     st.divider()
 
-    st.header("2. Ubicación de los Hechos")
+   st.header("2. Ubicación de los Hechos")
     u1, u2, u3, u4 = st.columns(4)
     with u1:
-        if mapa_sectores:
-            smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región", lista_smz, key=f"sel_smz_{fid}")
-            smz_key_limpia = normalizar(smz_seleccionada)
-            sector_calculado = mapa_sectores.get(smz_key_limpia, "") if smz_seleccionada != "SELECCIONAR..." else ""
-        else:
-            smz_seleccionada = capturar_texto_validado("SMZ / Supermanzana", key=f"txt_smz_{fid}")
-            sector_calculado = ""
-
+        smz_dict = catalogos.get("SMZ_SECTOR", {})
+        smz_opciones = list(smz_dict.keys()) if smz_dict else ["1", "2", "100", "ZH"]
+        smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región", smz_opciones, key=f"sel_smz_{fid}")
+        
+        # Cálculo automático del sector basado en la opción elegida
+        smz_key_limpia = str(smz_seleccionada).strip().upper()
+        sector_calculado = smz_dict.get(smz_key_limpia, "")
+            
         manzana = capturar_texto_validado("Manzana", key=f"txt_manzana_{fid}")
         lote = capturar_texto_validado("Lote", key=f"txt_lote_{fid}")
 
     with u2:
-        sector = st.text_input("Sector Asignado (Automático)", value=sector_calculado, disabled=True, key=f"txt_sec_{fid}")
+        sector = st.text_input("Sector Asignado (Automático)", value=sector_calculado, disabled=True)
         calle = capturar_texto_validado("Calle", key=f"txt_calle_{fid}")
         colonia = capturar_texto_validado("Colonia / Fraccionamiento", key=f"txt_colonia_{fid}")
 
@@ -544,6 +544,8 @@ with tab1:
     with u4:
         longitud = capturar_texto_validado("Longitud", key=f"txt_longitud_{fid}")
         latitud = capturar_texto_validado("Latitud", key=f"txt_latitud_{fid}")
+
+    st.divider()
 
     st.divider()
 
