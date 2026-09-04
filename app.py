@@ -179,31 +179,10 @@ def normalizar(texto) -> str:
     sin_acentos = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
     return sin_acentos.upper().strip()
 
-@st.dialog("⚠️ ALERTA DE FORMATO")
-def popup_alerta_formato(campo_nombre: str):
-    st.markdown("""
-        <div style="background-color: #FFF3CD; border: 2px solid #FFECB5; border-radius: 10px; padding: 14px; margin-bottom: 12px; text-align: center;">
-            <p style="color: #842029; font-size: 14px; font-weight: 700; margin: 0;">
-                ⚠️ VERIFICAR QUE NO LLEVE ACENTUACIÓN Y TODO ESTÉ EN MAYÚSCULAS
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"<p style='text-align: center; font-size: 15px;'>Se detectaron minúsculas o acentos en el campo:<br><b>{campo_nombre}</b>.</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray; font-size: 13px;'>El texto se convierte automáticamente al formato normado sin acentos y en mayúsculas.</p>", unsafe_allow_html=True)
-    
-    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-    
-    # Se usa un formulario dentro del diálogo para asegurar que el botón procese el rerun de inmediato
-    with st.form(f"form_dialog_alerta_{campo_nombre}"):
-        submitted_alerta = st.form_submit_button("VERIFICAR Y CONTINUAR", use_container_width=True)
-        if submitted_alerta:
-            st.rerun()
-
 def capturar_texto_validado(label: str, key: str, value: str = "", disabled: bool = False) -> str:
     val_ingresado = st.text_input(label, value=value, key=key, disabled=disabled)
     if not disabled and tiene_acentos_o_minusculas(val_ingresado):
-        popup_alerta_formato(label)
+        st.markdown(f"<p style='color: #b45309; font-size: 11px; margin-top: -15px; margin-bottom: 10px;'>⚠️ <i>Se detectaron minúsculas o acentos (convertido automáticamente a mayúsculas sin acentos).</i></p>", unsafe_allow_html=True)
     return normalizar(val_ingresado)
 
 def get_image_base64(ruta_imagen: str) -> str:
@@ -818,13 +797,13 @@ with tab1:
     with obs_col1:
         txt_obs = st.text_area("Observaciones (Máx. 200 caracteres)", max_chars=200, height=150, key=f"txt_observaciones_input_{fid}")
         if tiene_acentos_o_minusculas(txt_obs):
-            popup_alerta_formato("Observaciones")
+            st.markdown(f"<p style='color: #b45309; font-size: 11px;'>⚠️ <i>Se detectaron minúsculas o acentos en Observaciones (convertido automáticamente).</i></p>", unsafe_allow_html=True)
         observaciones = normalizar(txt_obs)
 
     with obs_col2:
         txt_narrativa = st.text_area("Narrativa Completa del Reporte", height=150, key=f"txt_narrativa_input_{fid}")
         if tiene_acentos_o_minusculas(txt_narrativa):
-            popup_alerta_formato("Narrativa Completa del Reporte")
+            st.markdown(f"<p style='color: #b45309; font-size: 11px;'>⚠️ <i>Se detectaron minúsculas o acentos en la Narrativa (convertido automáticamente).</i></p>", unsafe_allow_html=True)
         narrativa_reporte = normalizar(txt_narrativa)
 
     st.divider()
@@ -913,11 +892,4 @@ if st.session_state["rol_usuario"] == "editor":
         st.header("📊 Panel de Coordinación y Exportación de Datos")
         st.info("Vista para consulta general, métricas y descarga de reportes consolidados.")   
         st.divider()
-        st.markdown("""
-        | Usuario | Contraseña | Rol | Permisos y Acceso |
-        | :--- | :--- | :--- | :--- |
-        | **editor** | `geavig2026admin` | Editor | Captura + Ver Base de Datos y Exportar Excel |
-        | **captura1** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
-        | **captura2** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
-        | **captura3** | `geavig2026user` | Capturista | Únicamente Formulario de Captura |
-        """)
+        st.success("🔒 El sistema de control de usuarios está protegido y gestionado de forma segura mediante los secretos del servidor.")
