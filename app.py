@@ -525,7 +525,6 @@ with tab1:
         smz_opciones = list(smz_dict.keys()) if smz_dict else ["1", "2", "100", "ZH"]
         smz_seleccionada = st.selectbox("SMZ / Supermanzana / Región", smz_opciones, key=f"sel_smz_{fid}")
         
-        # Cálculo automático del sector basado en la opción elegida
         smz_key_limpia = str(smz_seleccionada).strip().upper()
         sector_calculado = smz_dict.get(smz_key_limpia, "")
             
@@ -544,6 +543,8 @@ with tab1:
     with u4:
         longitud = capturar_texto_validado("Longitud", key=f"txt_longitud_{fid}")
         latitud = capturar_texto_validado("Latitud", key=f"txt_latitud_{fid}")
+
+    st.divider()
 
     st.divider()
 
