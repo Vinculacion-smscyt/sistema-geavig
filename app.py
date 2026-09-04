@@ -518,7 +518,7 @@ with tab1:
 
     st.divider()
 
-   st.header("2. Ubicación de los Hechos")
+    st.header("2. Ubicación de los Hechos")
     u1, u2, u3, u4 = st.columns(4)
     with u1:
         smz_dict = catalogos.get("SMZ_SECTOR", {})
