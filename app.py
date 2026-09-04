@@ -576,3 +576,6 @@ with tab1:
         else:
             vic_nacionalidad = vic_nac_sel
             vic_entidad_origen = "NO ESPECIFICA"
+
+# DIAGNÓSTICO RÁPIDO: Descomenta esto temporalmente para verificar las llaves del Excel
+# st.write("Contenido del mapa de sectores:", mapa_sectores)
